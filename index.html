@@ -41,9 +41,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--white);fo
   position:fixed;top:0;left:0;right:0;z-index:999;
   height:48px;background:rgba(8,8,8,0.97);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:4px;
+  display:flex;align-items:center;padding:0 12px;gap:3px;
   backdrop-filter:blur(20px);
+  overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.top-nav::-webkit-scrollbar{display:none}
 .top-btn{
   padding:6px 14px;border:none;background:transparent;
   color:var(--muted);cursor:pointer;
@@ -377,11 +381,27 @@ select.form-input option{background:#1a1a1a}
 @media(max-width:480px){
   .kpi-grid{grid-template-columns:1fr 1fr}
   .m-numbers{grid-template-columns:1fr 1fr}
-  .top-btn{font-size:7px;padding:4px 7px;letter-spacing:0.5px}
+  .top-btn{font-size:7px;padding:4px 8px;letter-spacing:0.5px;white-space:nowrap}
+  .top-logo{font-size:14px;letter-spacing:2px;margin-right:6px}
+  .top-sep{display:none}
+  .hero-title{font-size:clamp(40px,13vw,70px)!important}
+  .m-title{font-size:clamp(36px,10vw,60px)!important}
+  .events-grid{grid-template-columns:1fr!important}
+  .grid-2,.grid-3-1,.grid-1-2{grid-template-columns:1fr!important}
+  .kpi-grid{grid-template-columns:1fr 1fr!important}
+  .content,.sub-content{padding:16px!important}
+  .panel{padding:14px!important}
+  .chart-bars{height:70px!important}
+  .modal{margin:10px}
+  .modal-body{padding:18px!important}
 }
 </style>
 </head>
 <body>
+
+<!-- SIDEBAR OVERLAYS -->
+<div class="sidebar-overlay" id="dashOverlay" onclick="toggleSidebar('dash')"></div>
+<div class="sidebar-overlay" id="adminOverlay" onclick="toggleSidebar('admin')"></div>
 
 <!-- TOP NAV -->
 <div class="top-nav">
@@ -695,9 +715,10 @@ select.form-input option{background:#1a1a1a}
 <div class="section" id="section-dashboard" style="display:none">
   <div class="sidebar-overlay" id="dashOverlay" onclick="toggleSidebar('dash')"></div>
   <div class="sidebar" id="dashSidebar">
-    <div class="sidebar-logo">
+    <div class="sidebar-logo" style="position:relative">
       <div class="sidebar-logo-text">GALLERY</div>
       <div class="sidebar-logo-sub">Admin Panel</div>
+      <button onclick="toggleSidebar('dash')" style="position:absolute;top:12px;right:12px;background:none;border:1px solid var(--border);color:var(--muted);width:24px;height:24px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>
     </div>
     <div class="sidebar-section-label">Principal</div>
     <div class="nav-item active" onclick="switchDash('overview',this)"><span class="icon">▦</span>Dashboard</div>
@@ -722,8 +743,9 @@ select.form-input option{background:#1a1a1a}
 
   <div class="main" id="dashMain" style="margin-left:var(--sidebar)">
     <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar('dash')" id="dashHamburger">☰</button>
       <div class="topbar-title" id="dashTitle">DASHBOARD</div>
-      <div class="live-pill"><div class="live-dot"></div>EN VIVO</div>
+      <div class="live-pill"><div class="live-dot"></div><span data-i18n="live">EN VIVO</span></div>
       <div class="topbar-date" id="dashDate"></div>
     </div>
     <div class="content" id="dashContent"></div>
@@ -736,12 +758,13 @@ select.form-input option{background:#1a1a1a}
 <div class="section" id="section-admin" style="display:none">
   <div class="sidebar-overlay" id="adminOverlay" onclick="toggleSidebar('admin')"></div>
   <div class="admin-sidebar" id="adminSidebar">
-    <div class="admin-logo-wrap">
+    <div class="admin-logo-wrap" style="position:relative">
       <div class="admin-logo">HONOPS</div>
       <div class="admin-badge">
         <div class="admin-badge-dot"></div>
         <span class="admin-badge-text">Super Admin</span>
       </div>
+      <button onclick="toggleSidebar('admin')" style="position:absolute;top:12px;right:12px;background:none;border:1px solid rgba(201,168,76,0.2);color:var(--gold);width:24px;height:24px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;transition:all 0.2s">✕</button>
     </div>
     <div class="sidebar-section-label" style="color:rgba(201,168,76,0.4)">Navigation</div>
     <div class="admin-nav-item active" onclick="switchAdmin('overview',this)"><span class="icon">▦</span>Vue globale</div>
@@ -861,9 +884,40 @@ function setLang(l){
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()))
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const k=el.getAttribute('data-i18n')
-    if(T[l][k]) el.textContent=T[l][k]
+    if(T[l]&&T[l][k]) el.textContent=T[l][k]
   })
+  // Mettre à jour les dates selon la langue
+  const locale=l==='fr'?'fr-FR':l==='de'?'de-DE':l==='en'?'en-GB':'es-ES'
+  const dateOpts={weekday:'long',day:'numeric',month:'long'}
+  const dashDate=document.getElementById('dashDate')
+  const adminDate=document.getElementById('adminDate')
+  if(dashDate) dashDate.textContent=new Date().toLocaleDateString(locale,dateOpts).toUpperCase()
+  if(adminDate) adminDate.textContent=new Date().toLocaleDateString(locale,dateOpts).toUpperCase()
   renderEvents()
+}
+
+// ══════════════════════════════════════
+// SIDEBAR MOBILE TOGGLE
+// ══════════════════════════════════════
+function toggleSidebar(type){
+  if(type==='dash'){
+    const sb=document.getElementById('dashSidebar')
+    const ov=document.getElementById('dashOverlay')
+    const isOpen=sb.classList.contains('open')
+    closeSidebars()
+    if(!isOpen){sb.classList.add('open');ov.classList.add('show')}
+  } else {
+    const sb=document.getElementById('adminSidebar')
+    const ov=document.getElementById('adminOverlay')
+    const isOpen=sb&&sb.classList.contains('open')
+    closeSidebars()
+    if(!isOpen&&sb){sb.classList.add('open');ov.classList.add('show')}
+  }
+}
+
+function closeSidebars(){
+  document.querySelectorAll('.sidebar,.admin-sidebar').forEach(s=>s.classList.remove('open'))
+  document.querySelectorAll('.sidebar-overlay').forEach(o=>o.classList.remove('show'))
 }
 
 // ══════════════════════════════════════
@@ -1182,6 +1236,8 @@ function initDashboard(){
 function switchDash(name,navEl){
   document.querySelectorAll('#section-dashboard .nav-item').forEach(n=>n.classList.remove('active'))
   if(navEl) navEl.classList.add('active')
+  // Fermer sidebar sur mobile
+  if(window.innerWidth<=900) closeSidebars()
   const titles={overview:'DASHBOARD',events:'EVENTOS',reservations:'RESERVAS',scanner:'SCANNER QR',newsletter:'NEWSLETTER',predictions:'PREDICCIONES',loyalty:'PROGRAMA VIP',resale:'REVENTA',stats:'ESTADÍSTICAS',billing:'MI SUSCRIPCIÓN'}
   document.getElementById('dashTitle').textContent=titles[name]||name.toUpperCase()
   document.getElementById('dashContent').innerHTML=DASH_VIEWS[name]||'<div class="panel"><div class="panel-title">En desarrollo</div></div>'
@@ -1346,6 +1402,8 @@ function initAdmin(){
 function switchAdmin(name,navEl){
   document.querySelectorAll('#section-admin .admin-nav-item').forEach(n=>n.classList.remove('active'))
   if(navEl) navEl.classList.add('active')
+  // Fermer sidebar sur mobile
+  if(window.innerWidth<=900) closeSidebars()
   const titles={overview:'VUE GLOBALE',clubs:'TOUS LES CLUBS',finances:'FINANCES',tickets:'BILLETS GLOBAUX',stats:'STATISTIQUES',notifications:'NOTIFICATIONS',support:'SUPPORT',logs:'LOGS D\'ACTIVITÉ'}
   document.getElementById('adminTitle').textContent=titles[name]||name.toUpperCase()
   document.getElementById('adminContent').innerHTML=ADMIN_VIEWS[name]||'<div class="panel"><div class="panel-title">En développement</div></div>'
@@ -1394,13 +1452,18 @@ function renderPricingFeatures(){
 // ══════════════════════════════════════
 lang=detectLang()
 document.addEventListener('DOMContentLoaded',()=>{
+  // Mettre à jour les boutons de langue
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===lang.toUpperCase()))
   setLang(lang)
   renderEvents()
   renderPhotos()
   renderCompTable()
   renderPricingFeatures()
-  document.getElementById('dashDate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()
-  document.getElementById('adminDate').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()
+  // Dates dans la langue détectée
+  const locale = lang==='fr'?'fr-FR':lang==='de'?'de-DE':lang==='en'?'en-GB':'es-ES'
+  const dateOpts = {weekday:'long',day:'numeric',month:'long'}
+  document.getElementById('dashDate').textContent=new Date().toLocaleDateString(locale,dateOpts).toUpperCase()
+  document.getElementById('adminDate').textContent=new Date().toLocaleDateString(locale,dateOpts).toUpperCase()
 })
 </script>
 </body>
