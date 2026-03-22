@@ -1,1 +1,1407 @@
-hereu
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HonoPs — Prototype Final</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --surface: #0f0f0f;
+  --card: #141414;
+  --border: rgba(255,255,255,0.06);
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.12);
+  --gold-glow: rgba(201,168,76,0.25);
+  --white: #f0ece3;
+  --muted: rgba(240,236,227,0.42);
+  --muted2: rgba(240,236,227,0.18);
+  --green: #3ecf8e;
+  --green-dim: rgba(62,207,142,0.1);
+  --red: #e05252;
+  --red-dim: rgba(224,82,82,0.1);
+  --blue: #5b9cf6;
+  --blue-dim: rgba(91,156,246,0.1);
+  --orange: #f0884a;
+  --orange-dim: rgba(240,136,74,0.1);
+  --sidebar: 220px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3)}
+
+/* ── SECTIONS ── */
+.section{display:none;height:100vh;overflow:hidden}
+.section.active{display:flex}
+
+/* ── NAV TOP ── */
+.top-nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:48px;background:rgba(8,8,8,0.97);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:4px;
+  backdrop-filter:blur(20px);
+}
+.top-btn{
+  padding:6px 14px;border:none;background:transparent;
+  color:var(--muted);cursor:pointer;
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;
+  transition:all 0.2s;border-radius:2px;
+}
+.top-btn:hover{color:var(--white);background:rgba(255,255,255,0.05)}
+.top-btn.active{color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2)}
+.top-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:4px;color:var(--gold);margin-right:16px;
+}
+.top-sep{width:1px;height:20px;background:var(--border);margin:0 8px}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes scan{0%{top:0}50%{top:calc(100% - 2px)}100%{top:0}}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.7}}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);height:100%;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding-top:48px;overflow-y:auto;
+}
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo-text{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--gold)}
+.sidebar-logo-sub{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted2);text-transform:uppercase;margin-top:3px}
+.sidebar-section-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted2);text-transform:uppercase;padding:16px 20px 6px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 8px;
+  border-radius:3px;cursor:pointer;font-size:12px;font-weight:500;
+  color:var(--muted);border:1px solid transparent;transition:all 0.15s;
+}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--white)}
+.nav-item.active{background:var(--gold-dim);border-color:rgba(201,168,76,0.2);color:var(--gold)}
+.nav-item .icon{font-size:13px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:white;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;font-family:'DM Mono',monospace}
+.sidebar-bottom{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:3px;cursor:pointer;transition:background 0.15s}
+.user-pill:hover{background:rgba(255,255,255,0.04)}
+.user-avatar{width:28px;height:28px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.user-name{font-size:11px;font-weight:600}
+.user-role{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-top:48px}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}
+.topbar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--red-dim);border:1px solid rgba(224,82,82,0.2);padding:3px 8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--red)}
+.live-dot{width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1.2s infinite}
+.topbar-date{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px}
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* ── PANELS ── */
+.panel{background:var(--card);border:1px solid var(--border);padding:20px;animation:fadeUp 0.4s ease both}
+.panel-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.panel-action{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--gold);cursor:pointer;text-transform:uppercase;border:none;background:none}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--border);padding:18px;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both}
+.kpi-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;line-height:1;margin-bottom:6px}
+.kpi-change{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;display:flex;align-items:center;gap:4px}
+.kpi-change.up{color:var(--green)}
+.kpi-change.down{color:var(--orange)}
+.kpi-glow{position:absolute;bottom:0;right:0;width:50px;height:50px;border-radius:50%;filter:blur(18px);opacity:0.25}
+
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.grid-3-1{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:10px}
+
+/* ── CHART ── */
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:90px;margin-bottom:6px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
+.bar{width:100%;border-radius:1px;transition:all 0.3s;cursor:pointer;min-height:3px}
+.bar.today{background:var(--gold)!important;border-color:var(--gold)!important}
+.bar-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--muted2);letter-spacing:1px}
+.bar-val{font-family:'DM Mono',monospace;font-size:7px;color:var(--muted)}
+
+/* ── EVENTS LIST ── */
+.event-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.15s}
+.event-row:last-child{border-bottom:none}
+.event-row:hover{margin:0 -20px;padding:10px 20px;background:rgba(255,255,255,0.02)}
+.event-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.event-row-info{flex:1;min-width:0}
+.event-row-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-row-meta{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+.event-row-stats{text-align:right;flex-shrink:0}
+.event-row-tickets{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px}
+.event-row-rev{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)}
+.mini-bar{width:50px;height:2px;background:rgba(255,255,255,0.08);margin-top:3px;margin-left:auto}
+.mini-bar-fill{height:100%;border-radius:1px}
+
+/* ── RESERVATIONS ── */
+.resa-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.resa-row:last-child{border-bottom:none}
+.resa-avatar{width:26px;height:26px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.resa-name{font-size:11px;font-weight:600}
+.resa-detail{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:1px}
+.badge{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;margin-left:auto;flex-shrink:0}
+.badge-vip{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);color:var(--gold)}
+.badge-confirmed{background:var(--green-dim);border:1px solid rgba(62,207,142,0.2);color:var(--green)}
+.badge-pending{background:var(--orange-dim);border:1px solid rgba(240,136,74,0.2);color:var(--orange)}
+.badge-sold{background:var(--red-dim);border:1px solid rgba(224,82,82,0.2);color:var(--red)}
+.badge-new{background:var(--gold);color:var(--bg)}
+.badge-genre{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:var(--muted)}
+.badge-trial{background:var(--blue-dim);border:1px solid rgba(91,156,246,0.2);color:var(--blue)}
+.badge-active{background:var(--green-dim);border:1px solid rgba(62,207,142,0.2);color:var(--green)}
+.badge-pastdue{background:var(--red-dim);border:1px solid rgba(224,82,82,0.2);color:var(--red)}
+
+/* ── RING ── */
+.ring-wrap{display:flex;align-items:center;gap:16px;padding:6px 0}
+.ring-pct{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;line-height:1}
+.ring-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.ring-detail{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ── SCANNER ── */
+.scanner-box{width:110px;height:110px;border:2px solid var(--gold);margin:0 auto 14px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--gold-dim)}
+.scan-line{position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);animation:scan 2s ease-in-out infinite;box-shadow:0 0 8px var(--gold)}
+.scan-result{padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.scan-ok{background:var(--green-dim);border:1px solid rgba(62,207,142,0.2);color:var(--green)}
+.scan-err{background:var(--red-dim);border:1px solid rgba(224,82,82,0.2);color:var(--red)}
+.scan-counts{display:flex;justify-content:space-around;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.scan-num{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px}
+.scan-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+
+/* ── NL ── */
+.nl-stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:14px;text-align:center}
+.nl-num{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--gold)}
+.nl-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+
+/* ── FORMS ── */
+.form-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px}
+.form-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--white);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--muted2)}
+select.form-input option{background:#1a1a1a}
+
+/* ── BUTTONS ── */
+.btn-gold{background:var(--gold);color:var(--bg);border:none;padding:11px 24px;font-family:'DM Mono',monospace;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.btn-gold:hover{background:#e0bf6a}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);padding:11px 24px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:5px 10px;font-size:8px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.2s}
+
+/* ── EVENTS GRID (site public) ── */
+.events-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.event-card{position:relative;overflow:hidden;cursor:pointer;transition:transform 0.3s}
+.event-card:hover{transform:scale(1.02);z-index:2}
+.event-card.featured{grid-column:span 2}
+.event-card.sold-out{cursor:not-allowed;opacity:0.55}
+.event-card.sold-out:hover{transform:none}
+.event-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.4) 55%,transparent 100%)}
+.event-content{position:absolute;bottom:0;left:0;right:0;padding:20px}
+.event-date{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
+.event-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;line-height:1;margin-bottom:4px}
+.event-card.featured .event-name{font-size:36px}
+.event-dj{font-size:11px;color:var(--muted);margin-bottom:12px}
+.event-footer{display:flex;align-items:center;justify-content:space-between}
+.event-price{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:1px}
+.event-badges{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.cap-bar{height:2px;background:rgba(255,255,255,0.1);margin-top:10px}
+.cap-fill{height:100%}
+.cap-text{font-family:'DM Mono',monospace;font-size:7px;color:var(--muted2);margin-top:3px}
+
+/* ── SITE PUBLIC HERO ── */
+.hero{height:100vh;display:flex;align-items:flex-end;padding:0 36px 70px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 70% 40%,rgba(201,168,76,0.12) 0%,transparent 70%),linear-gradient(180deg,#0a0a0a 0%,#050505 100%)}
+.hero-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 79px,rgba(255,255,255,0.02) 80px),repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(255,255,255,0.02) 80px)}
+.hero-content{position:relative;z-index:2;max-width:600px}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,10vw,120px);line-height:0.9;letter-spacing:2px;margin-bottom:24px}
+.hero-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:380px;margin-bottom:32px}
+.hero-cta{display:flex;gap:12px}
+
+/* ── TICKER ── */
+.ticker{background:var(--gold);padding:9px 0;overflow:hidden;white-space:nowrap}
+.ticker-track{display:inline-flex;animation:ticker 25s linear infinite}
+.ticker-item{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:4px;color:var(--bg);padding:0 32px}
+
+/* ── STATS BAR ── */
+.stats-bar{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 36px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat-item{text-align:center}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--gold);letter-spacing:2px;line-height:1}
+.stat-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:3px}
+
+/* ── PUBLIC NAV ── */
+.pub-nav{position:absolute;top:0;left:0;right:0;z-index:10;padding:18px 36px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(8,8,8,0.9),transparent)}
+.pub-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--gold);text-decoration:none}
+.pub-links{display:flex;gap:24px}
+.pub-link{color:var(--muted);font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:color 0.2s}
+.pub-link:hover,.pub-link.active{color:var(--gold)}
+.pub-nav-right{display:flex;align-items:center;gap:10px}
+
+/* ── FILTER BTNS ── */
+.filter-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.filter-btn:hover,.filter-btn.active{background:var(--gold-dim);border-color:rgba(201,168,76,0.3);color:var(--gold)}
+
+/* ── LANG ── */
+.lang-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;padding:3px 7px;cursor:pointer;transition:all 0.2s;letter-spacing:1px}
+.lang-btn.active,.lang-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);max-width:520px;width:100%;max-height:88vh;overflow-y:auto;transform:translateY(24px) scale(0.97);transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);position:relative}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-body{padding:28px}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.5);border:1px solid var(--border);color:var(--white);width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;z-index:10}
+.ticket-option{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;margin-bottom:7px}
+.ticket-option:hover,.ticket-option.selected{border-color:var(--gold);background:var(--gold-dim)}
+.ticket-opt-price{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:1px}
+
+/* ── HONOPS MARKETING ── */
+.marketing-hero{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;padding-top:48px}
+.m-nav{padding:18px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.m-logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:5px;color:var(--gold)}
+.m-hero{padding:80px 40px;text-align:center;background:radial-gradient(ellipse 60% 40% at 50% 50%,rgba(201,168,76,0.1) 0%,transparent 70%)}
+.m-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,8vw,100px);letter-spacing:4px;line-height:0.95;margin-bottom:24px}
+.m-sub{font-size:16px;color:var(--muted);line-height:1.8;max-width:520px;margin:0 auto 40px}
+.m-numbers{padding:50px 40px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+.m-num{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px;line-height:1}
+.m-num-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+.m-features{padding:60px 40px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.m-feature{background:var(--card);border:1px solid var(--border);padding:24px}
+.m-feat-icon{font-size:24px;margin-bottom:12px}
+.m-feat-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:8px}
+.m-feat-desc{font-size:12px;color:var(--muted);line-height:1.7}
+.m-cta{padding:70px 40px;text-align:center;background:radial-gradient(ellipse 50% 60% at 50% 50%,rgba(201,168,76,0.07) 0%,transparent 70%)}
+.m-cta-title{font-family:'Bebas Neue',sans-serif;font-size:64px;letter-spacing:4px;color:var(--gold);margin-bottom:14px}
+
+/* ── SUPER ADMIN ── */
+.admin-sidebar{
+  width:240px;min-width:240px;background:#0a0a0a;
+  border-right:1px solid rgba(201,168,76,0.12);
+  display:flex;flex-direction:column;padding-top:48px;
+}
+.admin-logo-wrap{padding:22px 20px 16px;border-bottom:1px solid rgba(201,168,76,0.1)}
+.admin-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--gold)}
+.admin-badge{display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:2px 8px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25)}
+.admin-badge-dot{width:4px;height:4px;background:var(--gold);border-radius:50%;animation:blink 1.5s infinite}
+.admin-badge-text{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
+.admin-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 8px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);border:1px solid transparent;transition:all 0.15s}
+.admin-nav-item:hover{background:rgba(255,255,255,0.04);color:var(--white)}
+.admin-nav-item.active{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.2);color:var(--gold)}
+
+/* ── ALERT ── */
+.alert{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;animation:fadeUp 0.3s ease both}
+.alert-dot{width:5px;height:5px;border-radius:50%;animation:blink 1s infinite;flex-shrink:0}
+
+/* ── PROGRESS ── */
+.progress{height:3px;background:rgba(255,255,255,0.06);margin-top:4px}
+.progress-fill{height:100%;transition:width 1s ease}
+
+/* ── TABLE ── */
+.table-header{display:grid;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02)}
+.table-row{display:grid;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center;transition:background 0.15s;cursor:pointer}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:rgba(255,255,255,0.02)}
+.th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(240,236,227,0.25);text-transform:uppercase}
+
+/* ── LOYALTY ── */
+.loyalty-card{background:var(--card);border:1px solid var(--border);padding:20px;text-align:center}
+.loyalty-pts{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--gold);letter-spacing:3px;line-height:1}
+.reward-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--border);margin-bottom:7px;transition:all 0.2s}
+.reward-item.available{border-color:rgba(201,168,76,0.3);background:var(--gold-dim)}
+
+/* ── REVENTE ── */
+.revente-card{background:var(--card);border:1px solid var(--border);padding:14px;margin-bottom:7px;cursor:pointer;transition:all 0.2s}
+.revente-card.selected{border-color:rgba(201,168,76,0.4);background:var(--gold-dim)}
+.revente-card:hover{border-color:rgba(255,255,255,0.12)}
+
+/* ── PREDICTIONS ── */
+.pred-card{background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:10px}
+.pred-rec{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);margin-bottom:5px}
+
+/* scrollable sub-content */
+.sub-content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* ── RESPONSIVE ── */
+.hamburger{display:none;background:none;border:1px solid var(--border);color:var(--white);width:32px;height:32px;font-size:15px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+.hamburger:hover{border-color:var(--gold);color:var(--gold)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:149;backdrop-filter:blur(4px)}
+.sidebar-overlay.show{display:block}
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .grid-2,.grid-3-1,.grid-1-2{grid-template-columns:1fr}
+  .events-grid{grid-template-columns:1fr}
+  .event-card.featured{grid-column:span 1}
+  .m-numbers{grid-template-columns:1fr 1fr}
+  .m-features{grid-template-columns:1fr 1fr}
+  .topbar-date{display:none!important}
+  .hamburger{display:flex!important}
+  /* Dashboard sidebar mobile */
+  .sidebar{
+    position:fixed!important;left:0;top:0;bottom:0;z-index:150;
+    transform:translateX(-100%);transition:transform 0.3s ease;
+  }
+  .sidebar.open{transform:translateX(0)!important}
+  .main{margin-left:0!important}
+  /* Admin sidebar mobile */
+  .admin-sidebar{
+    position:fixed!important;left:0;top:0;bottom:0;z-index:150;
+    transform:translateX(-100%);transition:transform 0.3s ease;
+  }
+  .admin-sidebar.open{transform:translateX(0)!important}
+  .admin-main{margin-left:0!important}
+  /* Public site */
+  .pub-links{display:none}
+  .hero{padding:0 20px 50px!important}
+  .hero-title{font-size:clamp(48px,12vw,80px)!important}
+  .events-section-pad{padding:40px 20px!important}
+  .stats-bar{padding:16px 20px;grid-template-columns:1fr 1fr}
+  /* Marketing */
+  .m-hero{padding:50px 20px!important}
+  .m-title{font-size:clamp(40px,10vw,72px)!important}
+  .m-nav{padding:14px 20px!important}
+  .m-numbers{padding:32px 20px!important}
+  .m-features{padding:40px 20px!important;grid-template-columns:1fr}
+  .m-cta{padding:48px 20px!important}
+  /* Table cols */
+  .hide-mobile{display:none!important}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .m-numbers{grid-template-columns:1fr 1fr}
+  .top-btn{font-size:7px;padding:4px 7px;letter-spacing:0.5px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="top-nav">
+  <div class="top-logo">HONOPS</div>
+  <div class="top-sep"></div>
+  <button class="top-btn active" onclick="showSection('marketing')">🌐 honops.es</button>
+  <button class="top-btn" onclick="showSection('public')">🎵 Site Club</button>
+  <button class="top-btn" onclick="showSection('dashboard')">⚙ Dashboard Club</button>
+  <button class="top-btn" onclick="showSection('admin')">👑 Super Admin</button>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 1 — PAGE MARKETING HONOPS
+════════════════════════════════════════ -->
+<div id="section-marketing" style="display:block;height:100vh;overflow-y:auto;padding-top:48px" class="active-scroll">
+  <div style="min-height:100vh;background:var(--bg)">
+
+    <!-- Nav -->
+    <div class="m-nav">
+      <div class="m-logo">HONOPS</div>
+      <div style="display:flex;gap:24px">
+        <span class="pub-link active">Producto</span>
+        <span class="pub-link">Precios</span>
+        <span class="pub-link">Contacto</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" style="padding:7px 16px;font-size:9px">Login</button>
+        <button class="btn-gold" style="padding:7px 16px;font-size:9px" onclick="showSection('dashboard')">Empezar gratis →</button>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="m-hero">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
+        <span style="width:24px;height:1px;background:var(--gold);display:inline-block"></span>
+        La plataforma de billettería sin comisiones
+        <span style="width:24px;height:1px;background:var(--gold);display:inline-block"></span>
+      </div>
+      <div class="m-title">
+        VENDE TUS ENTRADAS<br><span style="color:var(--gold)">SIN COMISIONES</span>
+      </div>
+      <div class="m-sub">
+        Deja de regalar el 12% de tus ventas a Resident Advisor.<br>
+        Con HonoPs, los datos de tus clientes son tuyos.<br>
+        <strong style="color:var(--white)">200€/mes. Sin comisiones. 90 días gratis.</strong>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn-gold" style="padding:14px 36px;font-size:12px" onclick="showSection('dashboard')">Crear cuenta gratis →</button>
+        <button class="btn-ghost" style="padding:14px 36px;font-size:12px" onclick="showSection('public')">Ver demo club</button>
+      </div>
+    </div>
+
+    <!-- Numbers -->
+    <div class="m-numbers">
+      <div>
+        <div class="m-num" style="color:var(--gold)">0%</div>
+        <div class="m-num-lbl">Comisión por entrada</div>
+      </div>
+      <div>
+        <div class="m-num" style="color:#3ecf8e">200€</div>
+        <div class="m-num-lbl">Al mes todo incluido</div>
+      </div>
+      <div>
+        <div class="m-num" style="color:#5b9cf6">90</div>
+        <div class="m-num-lbl">Días de prueba gratis</div>
+      </div>
+      <div>
+        <div class="m-num" style="color:#f0884a">∞</div>
+        <div class="m-num-lbl">Entradas vendibles</div>
+      </div>
+    </div>
+
+    <!-- Comparativa -->
+    <div style="padding:60px 40px">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:3px;text-align:center;margin-bottom:40px">
+        HONOPS VS <span style="color:var(--gold)">COMPETENCIA</span>
+      </h2>
+      <div style="background:var(--card);border:1px solid var(--border);overflow:hidden">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:rgba(255,255,255,0.02);padding:12px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Funcionalidad</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--gold);text-align:center">HONOPS</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-align:center;text-transform:uppercase">RA</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-align:center;text-transform:uppercase">Shotgun</div>
+        </div>
+        <div id="compTable"></div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="m-features">
+      <div class="m-feature" style="animation:fadeUp 0.4s ease both">
+        <div class="m-feat-icon">🎟</div>
+        <div class="m-feat-title">Billettería propia</div>
+        <div class="m-feat-desc">Venta directa en tu site. Early Bird, Normal, VIP. Pago por tarjeta. QR code enviado automáticamente.</div>
+      </div>
+      <div class="m-feature" style="animation:fadeUp 0.5s ease both">
+        <div class="m-feat-icon">⬡</div>
+        <div class="m-feat-title">QR Anti-fraude</div>
+        <div class="m-feat-desc">Código QR único y seguro por entrada. Imposible duplicar. El staff escanea con el móvil en la entrada.</div>
+      </div>
+      <div class="m-feature" style="animation:fadeUp 0.6s ease both">
+        <div class="m-feat-icon">▦</div>
+        <div class="m-feat-title">Dashboard completo</div>
+        <div class="m-feat-desc">Ventas en tiempo real, reservas, estadísticas, newsletter. Todo desde un panel intuitivo.</div>
+      </div>
+      <div class="m-feature" style="animation:fadeUp 0.7s ease both">
+        <div class="m-feat-icon">🔄</div>
+        <div class="m-feat-title">Reventa segura</div>
+        <div class="m-feat-desc">Tus clientes revenden sus entradas entre ellos. El QR se transfiere automáticamente. Tú ganas 2%.</div>
+      </div>
+      <div class="m-feature" style="animation:fadeUp 0.8s ease both">
+        <div class="m-feat-icon">★</div>
+        <div class="m-feat-title">Programa VIP</div>
+        <div class="m-feat-desc">Puntos de fidelidad por cada entrada. Recompensas automáticas. Tus mejores clientes vuelven más.</div>
+      </div>
+      <div class="m-feature" style="animation:fadeUp 0.9s ease both">
+        <div class="m-feat-icon">📈</div>
+        <div class="m-feat-title">Predicciones IA</div>
+        <div class="m-feat-desc">Previsión de ventas basada en tu histórico. Recomendaciones automáticas de precio y timing.</div>
+      </div>
+    </div>
+
+    <!-- Pricing -->
+    <div style="padding:60px 40px;text-align:center;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:3px;margin-bottom:8px">UN PRECIO. <span style="color:var(--gold)">SIN SORPRESAS.</span></h2>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:40px">Todo incluido. Sin comisiones. Sin letra pequeña.</div>
+      <div style="display:inline-block;background:var(--card);border:1px solid rgba(201,168,76,0.3);padding:40px 60px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:80px;color:var(--gold);letter-spacing:4px;line-height:1">200€</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:28px">AL MES · TODO INCLUIDO</div>
+        <div style="display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:28px">
+          <div id="pricingFeatures"></div>
+        </div>
+        <button class="btn-gold" style="width:100%;padding:14px;font-size:12px" onclick="showSection('dashboard')">
+          90 días gratis → Sin tarjeta
+        </button>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="m-cta">
+      <div class="m-cta-title">EMPIEZA HOY</div>
+      <div style="font-size:15px;color:var(--muted);margin-bottom:36px;line-height:1.7">
+        90 días gratis. Sin tarjeta de crédito.<br>
+        Tu club en línea en menos de 10 minutos.
+      </div>
+      <button class="btn-gold" style="padding:16px 48px;font-size:13px" onclick="showSection('dashboard')">
+        Crear mi cuenta gratis →
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:28px 40px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--gold)">HONOPS</div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:1px">© 2026 HonoPs · Plataforma de billettería para clubs · España</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 2 — SITE PUBLIC CLUB
+════════════════════════════════════════ -->
+<div id="section-public" style="display:none;height:100vh;overflow-y:auto;padding-top:48px">
+
+  <!-- Nav public -->
+  <div id="pubNav" style="position:sticky;top:0;z-index:100;padding:12px 24px;background:rgba(8,8,8,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--gold)">GALLERY<span style="color:var(--white)">CLUB</span></div>
+    <div class="pub-links" style="display:flex;gap:20px">
+      <span class="pub-link active" data-i18n="nav_events">Eventos</span>
+      <span class="pub-link" data-i18n="nav_gallery">Galería</span>
+      <span class="pub-link" onclick="showLoyalty()" data-i18n="nav_loyalty">★ Puntos</span>
+      <span class="pub-link" onclick="showReventa()" data-i18n="nav_resale">Reventa</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="stickyEventsBtn" onclick="scrollToEvents()" style="display:none;background:var(--gold);color:var(--bg);border:none;padding:7px 14px;font-family:'DM Mono',monospace;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer" data-i18n="hero_cta1">Ver Eventos</button>
+      <div style="display:flex;gap:3px">
+        <button class="lang-btn active" onclick="setLang('es')">ES</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('de')">DE</button>
+        <button class="lang-btn" onclick="setLang('fr')">FR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero" style="position:relative;height:85vh">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span style="width:24px;height:1px;background:var(--gold);display:inline-block"></span>
+        <span data-i18n="hero_eyebrow">Málaga · Centro · Desde 2018</span>
+      </div>
+      <h1 class="hero-title">
+        THE <span style="color:var(--gold)">NIGHT</span><br>STARTS<br>HERE
+      </h1>
+      <p class="hero-sub" data-i18n="hero_sub">La sala más exclusiva del centro de Málaga. Música electrónica, house y techno cada noche.</p>
+      <div class="hero-cta">
+        <button class="btn-gold" style="padding:13px 28px;font-size:11px" data-i18n="hero_cta1">Ver Eventos</button>
+        <button class="btn-ghost" style="padding:13px 28px;font-size:11px" onclick="openVipModal()" data-i18n="hero_cta2">Lista VIP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker">
+    <div class="ticker-track">
+      <span class="ticker-item">GALLERY CLUB <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">MÁLAGA <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">TECHNO NIGHT <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">HOUSE SESSION <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">VIP TABLE <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">EVERY WEEKEND <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">GALLERY CLUB <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">MÁLAGA <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">TECHNO NIGHT <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">HOUSE SESSION <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">VIP TABLE <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+      <span class="ticker-item">EVERY WEEKEND <span style="color:rgba(0,0,0,0.3)">✦</span></span>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num">400</div><div class="stat-lbl" data-i18n="stat_cap">Capacidad</div></div>
+    <div class="stat-item"><div class="stat-num">7</div><div class="stat-lbl" data-i18n="stat_nights">Noches/semana</div></div>
+    <div class="stat-item"><div class="stat-num">6</div><div class="stat-lbl" data-i18n="stat_events">Próximos eventos</div></div>
+    <div class="stat-item"><div class="stat-num">2018</div><div class="stat-lbl" data-i18n="stat_since">Desde</div></div>
+  </div>
+
+  <!-- Events section -->
+  <div style="padding:60px 36px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:3px">
+        <span data-i18n="sec_upcoming">PRÓXIMOS</span> <span style="color:var(--gold)" data-i18n="sec_events">EVENTOS</span>
+      </h2>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="filter-btn active" onclick="filterEvents('all',this)" data-i18n="filt_all">Todos</button>
+        <button class="filter-btn" onclick="filterEvents('Techno',this)">Techno</button>
+        <button class="filter-btn" onclick="filterEvents('House',this)">House</button>
+        <button class="filter-btn" onclick="filterEvents('Afro House',this)">Afro House</button>
+        <button class="filter-btn" onclick="filterEvents('vip',this)" data-i18n="filt_vip">Solo VIP</button>
+        <button class="filter-btn" onclick="sortEvents('price-asc',this)" data-i18n="filt_cheap">+ Baratos</button>
+        <button class="filter-btn" onclick="sortEvents('date',this)" data-i18n="filt_date">Por fecha</button>
+      </div>
+    </div>
+    <div class="events-grid" id="eventsGrid"></div>
+  </div>
+
+  <!-- Photos section -->
+  <div style="padding:0 36px 60px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:3px">
+        ÚLTIMAS <span style="color:var(--gold)">NOCHES</span>
+      </h2>
+      <button class="btn-ghost" style="padding:8px 18px;font-size:9px">Ver galería →</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px" id="photosGrid"></div>
+  </div>
+
+  <!-- Loyalty section -->
+  <div style="padding:60px 36px;background:var(--surface);border-top:1px solid var(--border)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px">★ PROGRAMA VIP</div>
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:3px;margin-bottom:16px;line-height:1">GANA PUNTOS.<br><span style="color:var(--gold)">OBTÉN PREMIOS.</span></h2>
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:24px">Cada entrada que compras suma puntos. Canjéalos por entradas gratis, descuentos o upgrades VIP.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border)">
+            <span style="font-size:12px">Early Bird</span>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">+50 pts</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border)">
+            <span style="font-size:12px">Entrada Normal</span>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">+100 pts</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid rgba(201,168,76,0.2)">
+            <span style="font-size:12px">★ Entrada VIP</span>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">+200 pts</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="background:var(--card);border:1px solid rgba(201,168,76,0.2);padding:28px;text-align:center">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Tus puntos</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--gold);letter-spacing:4px;line-height:1;margin-bottom:8px">347</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">4 noches · Próxima recompensa: 153 pts</div>
+          <div style="height:4px;background:rgba(255,255,255,0.08);margin-bottom:20px">
+            <div style="height:100%;width:69%;background:var(--gold)"></div>
+          </div>
+          <button class="btn-gold" style="width:100%;padding:11px;font-size:10px">Ver mis recompensas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer public -->
+  <div style="padding:28px 36px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--gold)">GALLERY CLUB</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:1px">C. Convalecientes, 5 · Málaga · +34 697 40 45 46</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)">📸</button>
+      <button class="btn-sm" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)">🎵</button>
+      <button class="btn-sm" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)">💬</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 3 — DASHBOARD CLUB
+════════════════════════════════════════ -->
+<div class="section" id="section-dashboard" style="display:none">
+  <div class="sidebar-overlay" id="dashOverlay" onclick="toggleSidebar('dash')"></div>
+  <div class="sidebar" id="dashSidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">GALLERY</div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+    <div class="sidebar-section-label">Principal</div>
+    <div class="nav-item active" onclick="switchDash('overview',this)"><span class="icon">▦</span>Dashboard</div>
+    <div class="nav-item" onclick="switchDash('events',this)"><span class="icon">◈</span>Eventos</div>
+    <div class="nav-item" onclick="switchDash('reservations',this)"><span class="icon">◎</span>Reservas<span class="nav-badge">3</span></div>
+    <div class="nav-item" onclick="switchDash('scanner',this)"><span class="icon">⬡</span>Scanner QR</div>
+    <div class="sidebar-section-label">Marketing</div>
+    <div class="nav-item" onclick="switchDash('newsletter',this)"><span class="icon">✉</span>Newsletter</div>
+    <div class="nav-item" onclick="switchDash('predictions',this)"><span class="icon">📈</span>Predicciones</div>
+    <div class="nav-item" onclick="switchDash('loyalty',this)"><span class="icon">★</span>Programa VIP</div>
+    <div class="nav-item" onclick="switchDash('resale',this)"><span class="icon">🔄</span>Reventa</div>
+    <div class="nav-item" onclick="switchDash('stats',this)"><span class="icon">⬟</span>Estadísticas</div>
+    <div class="sidebar-section-label">Config</div>
+    <div class="nav-item" onclick="switchDash('billing',this)"><span class="icon">💳</span>Mi suscripción</div>
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar">👤</div>
+        <div><div class="user-name">Carlos M.</div><div class="user-role">Manager</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main" id="dashMain" style="margin-left:var(--sidebar)">
+    <div class="topbar">
+      <div class="topbar-title" id="dashTitle">DASHBOARD</div>
+      <div class="live-pill"><div class="live-dot"></div>EN VIVO</div>
+      <div class="topbar-date" id="dashDate"></div>
+    </div>
+    <div class="content" id="dashContent"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 4 — SUPER ADMIN
+════════════════════════════════════════ -->
+<div class="section" id="section-admin" style="display:none">
+  <div class="sidebar-overlay" id="adminOverlay" onclick="toggleSidebar('admin')"></div>
+  <div class="admin-sidebar" id="adminSidebar">
+    <div class="admin-logo-wrap">
+      <div class="admin-logo">HONOPS</div>
+      <div class="admin-badge">
+        <div class="admin-badge-dot"></div>
+        <span class="admin-badge-text">Super Admin</span>
+      </div>
+    </div>
+    <div class="sidebar-section-label" style="color:rgba(201,168,76,0.4)">Navigation</div>
+    <div class="admin-nav-item active" onclick="switchAdmin('overview',this)"><span class="icon">▦</span>Vue globale</div>
+    <div class="admin-nav-item" onclick="switchAdmin('clubs',this)"><span class="icon">◈</span>Tous les clubs</div>
+    <div class="admin-nav-item" onclick="switchAdmin('finances',this)"><span class="icon">💰</span>Finances</div>
+    <div class="admin-nav-item" onclick="switchAdmin('tickets',this)"><span class="icon">🎟</span>Billets globaux</div>
+    <div class="admin-nav-item" onclick="switchAdmin('stats',this)"><span class="icon">⬟</span>Statistiques</div>
+    <div class="admin-nav-item" onclick="switchAdmin('notifications',this)"><span class="icon">🔔</span>Notifications<span class="nav-badge">2</span></div>
+    <div class="admin-nav-item" onclick="switchAdmin('support',this)"><span class="icon">⚡</span>Support</div>
+    <div class="admin-nav-item" onclick="switchAdmin('logs',this)"><span class="icon">◎</span>Logs activité</div>
+    <div class="sidebar-bottom" style="border-top-color:rgba(201,168,76,0.1)">
+      <div class="user-pill">
+        <div class="user-avatar" style="border-color:rgba(201,168,76,0.4)">👑</div>
+        <div><div class="user-name">Fondateur</div><div class="user-role" style="color:var(--gold)">HonoPs</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main" id="adminMain" style="background:#09090b;margin-left:240px">
+    <div class="topbar" style="background:#0a0a0a;border-bottom-color:rgba(201,168,76,0.1)">
+      <button class="hamburger" id="adminHamburger" onclick="toggleSidebar('admin')" style="border-color:rgba(201,168,76,0.2);color:var(--gold)">☰</button>
+      <div class="topbar-title" id="adminTitle" style="color:var(--gold)">VUE GLOBALE</div>
+      <div class="live-pill"><div class="live-dot"></div>ADMIN</div>
+      <div class="topbar-date" id="adminDate" style="margin-left:auto"></div>
+    </div>
+    <div class="content" id="adminContent"></div>
+  </div>
+</div>
+
+<!-- MODAL BILLET -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div style="height:200px;background:linear-gradient(135deg,#1a0533,#2d0a5e,#0d1a3a);position:relative;overflow:hidden">
+      <div id="modalGenre" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:100px;color:white;opacity:0.06;letter-spacing:10px"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,var(--surface) 100%)"></div>
+    </div>
+    <div class="modal-body">
+      <div id="modalDate2" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px"></div>
+      <h2 id="modalTitle" style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;line-height:1;margin-bottom:6px"></h2>
+      <div id="modalDj" style="font-size:13px;color:var(--muted);margin-bottom:20px"></div>
+      <div id="modalInfo" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:20px"></div>
+      <div id="ticketOptions" style="margin-bottom:16px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <div><label class="form-label" data-i18n="lbl_name">Tu nombre</label><input class="form-input" type="text" placeholder="Carlos Martinez"></div>
+        <div><label class="form-label" data-i18n="lbl_email">Tu email</label><input class="form-input" type="email" placeholder="carlos@gmail.com"></div>
+        <div><label class="form-label" data-i18n="lbl_phone">Teléfono (WhatsApp opcional)</label><input class="form-input" type="tel" placeholder="+34 612 345 678"></div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);margin-bottom:16px">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:3px" data-i18n="qr_title">✓ Entrada digital segura</div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.6" data-i18n="qr_desc">Recibirás tu entrada por email con código QR único. Protegido contra duplicados. Válido para 1 persona.</div>
+      </div>
+      <button class="btn-gold" style="width:100%;padding:14px;font-size:12px" id="modalBuyBtn" data-i18n="buy_ticket">Comprar Entrada</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const EVENTS = [
+  { id:1, featured:true, name:'TECHNO NIGHT', dj:'Charlotte de Witte b2b Amelie Lens', date:'SAB 29 MAR', time:'23:00 → 06:00', genre:'Techno', price:18, early:10, vip:120, cap:400, sold:340, badge:'last', grad:'linear-gradient(135deg,#1a0533,#2d0a5e,#0d1a3a)' },
+  { id:2, name:'HOUSE SESSIONS', dj:'Black Coffee', date:'VIE 28 MAR', time:'23:00 → 05:00', genre:'Afro House', price:20, early:14, vip:140, cap:400, sold:180, badge:'new', grad:'linear-gradient(135deg,#0a1628,#1e3a5f,#0d2416)' },
+  { id:3, name:'SOLD OUT NIGHT', dj:'Disclosure', date:'DOM 30 MAR', time:'22:00 → 04:00', genre:'House', price:15, early:10, vip:100, cap:400, sold:400, badge:'sold', grad:'linear-gradient(135deg,#1f0a0a,#4a1010,#1a0d2e)' },
+  { id:4, name:'REGGAETON VIBES', dj:'DJ Luian + Bad Gyal', date:'JUE 3 ABR', time:'22:00 → 05:00', genre:'Reggaeton', price:12, early:8, vip:90, cap:400, sold:95, badge:'vip', grad:'linear-gradient(135deg,#0a1a0a,#1a3d1a,#0d1a2e)' },
+  { id:5, name:'MINIMAL RAVE', dj:'Richie Hawtin', date:'VIE 4 ABR', time:'00:00 → 07:00', genre:'Minimal', price:22, early:15, vip:160, cap:400, sold:280, badge:'new', grad:'linear-gradient(135deg,#1a1200,#3d2d00,#1a0a1a)' },
+  { id:6, name:'OPENING PARTY', dj:'Fisher + Chris Lake', date:'SAB 5 ABR', time:'22:00 → 06:00', genre:'Tech House', price:25, early:18, vip:180, cap:400, sold:200, badge:'vip', grad:'linear-gradient(135deg,#0a0a1a,#1a0a3d,#0a1a1a)' },
+]
+
+const CLUBS_DATA = [
+  { id:1, nom:'Gallery Club', ville:'Málaga', slug:'gallery-club', couleur:'#c9a84c', statut:'active', billets:247, revenus:4410, trial_days:null, past_due:null, inscrit:'Jan 2026' },
+  { id:2, nom:'Sala Gold', ville:'Málaga', slug:'sala-gold', couleur:'#5b9cf6', statut:'trial', billets:0, revenus:0, trial_days:67, past_due:null, inscrit:'Feb 2026' },
+  { id:3, nom:'Discoteca Andén', ville:'Málaga', slug:'discoteca-anden', couleur:'#3ecf8e', statut:'past_due', billets:142, revenus:2840, trial_days:null, past_due:9, inscrit:'Nov 2025' },
+  { id:4, nom:'Fabrik', ville:'Madrid', slug:'fabrik', couleur:'#e05252', statut:'active', billets:580, revenus:11600, trial_days:null, past_due:null, inscrit:'Oct 2025' },
+  { id:5, nom:'Pacha', ville:'Ibiza', slug:'pacha', couleur:'#f0884a', statut:'active', billets:890, revenus:22250, trial_days:null, past_due:null, inscrit:'Sep 2025' },
+  { id:6, nom:'Joy Eslava', ville:'Madrid', slug:'joy-eslava', couleur:'#9b59b6', statut:'trial', billets:0, revenus:0, trial_days:45, past_due:null, inscrit:'Mar 2026' },
+]
+
+const TICKETS_DATA = [
+  { nom:'Carlos M.', email:'carlos@gmail.com', event:'TECHNO NIGHT', club:'Gallery Club', type:'normal', prix:18, date:'22 Mar', utilise:true },
+  { nom:'Sofia R.', email:'sofia@gmail.com', event:'TECHNO NIGHT', club:'Gallery Club', type:'vip', prix:120, date:'22 Mar', utilise:false },
+  { nom:'Marcus T.', email:'marcus@gmail.com', event:'HOUSE SESSIONS', club:'Gallery Club', type:'early', prix:14, date:'21 Mar', utilise:false },
+  { nom:'Ana M.', email:'ana@gmail.com', event:'MINIMAL RAVE', club:'Gallery Club', type:'normal', prix:22, date:'20 Mar', utilise:false },
+  { nom:'Laura K.', email:'laura@gmail.com', event:'FABRIK NIGHT', club:'Fabrik', type:'vip', prix:80, date:'19 Mar', utilise:true },
+  { nom:'Pedro S.', email:'pedro@gmail.com', event:'PACHA OPENING', club:'Pacha', type:'normal', prix:25, date:'18 Mar', utilise:true },
+]
+
+const LOGS_DATA = [
+  { action:'billet_vendu', club:'Gallery Club', detail:'Sofia R. · VIP · 120€', time:'23:47' },
+  { action:'club_inscrit', club:'Joy Eslava', detail:'Madrid · Trial démarré', time:'22:15' },
+  { action:'qr_scanne', club:'Gallery Club', detail:'Carlos M. · VALIDE', time:'23:51' },
+  { action:'paiement_echoue', club:'Discoteca Andén', detail:'Carte refusée · Jour 9', time:'18:30' },
+  { action:'newsletter_envoyee', club:'Fabrik', detail:'1.247 emails · 71% ouverture', time:'12:00' },
+  { action:'billet_vendu', club:'Pacha', detail:'Marcus T. · Normal · 25€', time:'11:22' },
+  { action:'club_reactive', club:'Joy Eslava', detail:'Abonnement réactivé', time:'10:05' },
+]
+
+// ══════════════════════════════════════
+// I18N
+// ══════════════════════════════════════
+const T = {
+  es:{ nav_events:'Eventos', nav_gallery:'Galería', nav_vip:'VIP', nav_loyalty:'★ Puntos', nav_resale:'Reventa', hero_eyebrow:'Málaga · Centro · Desde 2018', hero_sub:'La sala más exclusiva del centro de Málaga. Música electrónica, house y techno cada noche.', hero_cta1:'Ver Eventos', hero_cta2:'Lista VIP', stat_cap:'Capacidad', stat_nights:'Noches/semana', stat_events:'Próximos eventos', stat_since:'Desde', sec_upcoming:'PRÓXIMOS', sec_events:'EVENTOS', filt_all:'Todos', qr_title:'✓ Entrada digital segura', qr_desc:'Recibirás tu entrada por email con código QR único. Protegido contra duplicados. Válido para 1 persona.', buy_ticket:'Comprar Entrada', lbl_name:'Tu nombre', lbl_email:'Tu email', lbl_phone:'Teléfono (WhatsApp opcional)', from:'Desde', sold:'AGOTADO' },
+  en:{ nav_events:'Events', nav_gallery:'Gallery', nav_vip:'VIP', nav_loyalty:'★ Points', nav_resale:'Resale', hero_eyebrow:'Málaga · City Center · Since 2018', hero_sub:'The most exclusive venue in central Málaga. Electronic, house and techno every night.', hero_cta1:'See Events', hero_cta2:'VIP List', stat_cap:'Capacity', stat_nights:'Nights/week', stat_events:'Upcoming events', stat_since:'Since', sec_upcoming:'UPCOMING', sec_events:'EVENTS', filt_all:'All', qr_title:'✓ Secure digital ticket', qr_desc:'You will receive your ticket by email with a unique QR code. Protected against duplicates. Valid for 1 person.', buy_ticket:'Buy Ticket', lbl_name:'Your name', lbl_email:'Your email', lbl_phone:'Phone (WhatsApp optional)', from:'From', sold:'SOLD OUT' },
+  de:{ nav_events:'Events', nav_gallery:'Galerie', nav_vip:'VIP', nav_loyalty:'★ Punkte', nav_resale:'Weiterverkauf', hero_eyebrow:'Málaga · Stadtzentrum · Seit 2018', hero_sub:'Der exklusivste Club im Zentrum von Málaga. Elektronische Musik, House und Techno jeden Abend.', hero_cta1:'Events ansehen', hero_cta2:'VIP Liste', stat_cap:'Kapazität', stat_nights:'Nächte/Woche', stat_events:'Nächste Events', stat_since:'Seit', sec_upcoming:'NÄCHSTE', sec_events:'EVENTS', filt_all:'Alle', qr_title:'✓ Sicheres digitales Ticket', qr_desc:'Du erhältst dein Ticket per E-Mail mit einem einzigartigen QR-Code. Gegen Duplikate geschützt. Für 1 Person gültig.', buy_ticket:'Ticket kaufen', lbl_name:'Dein Name', lbl_email:'Deine E-Mail', lbl_phone:'Telefon (WhatsApp optional)', from:'Ab', sold:'AUSVERKAUFT' },
+  fr:{ nav_events:'Événements', nav_gallery:'Galerie', nav_vip:'VIP', nav_loyalty:'★ Points', nav_resale:'Revente', hero_eyebrow:'Málaga · Centre-ville · Depuis 2018', hero_sub:'La salle la plus exclusive du centre de Málaga. Musique électronique, house et techno chaque soir.', hero_cta1:'Voir les événements', hero_cta2:'Liste VIP', stat_cap:'Capacité', stat_nights:'Nuits/semaine', stat_events:'Prochains événements', stat_since:'Depuis', sec_upcoming:'PROCHAINS', sec_events:'ÉVÉNEMENTS', filt_all:'Tous', qr_title:'✓ Billet numérique sécurisé', qr_desc:'Vous recevrez votre billet par email avec un QR code unique. Protégé contre les duplicatas. Valable pour 1 personne.', buy_ticket:'Acheter un billet', lbl_name:'Votre nom', lbl_email:'Votre email', lbl_phone:'Téléphone (WhatsApp optionnel)', from:'À partir de', sold:'COMPLET' },
+}
+let lang = 'es'
+
+function detectLang(){
+  const c = (navigator.language||'es').substring(0,2).toLowerCase()
+  return T[c]?c:'es'
+}
+
+function setLang(l){
+  lang=l
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()))
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n')
+    if(T[l][k]) el.textContent=T[l][k]
+  })
+  renderEvents()
+}
+
+// ══════════════════════════════════════
+// SECTION NAVIGATION
+// ══════════════════════════════════════
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>{s.style.display='none';s.classList.remove('active')})
+  document.querySelectorAll('.top-btn').forEach(b=>b.classList.remove('active'))
+  const sec=document.getElementById('section-'+id)
+  sec.style.display=id==='dashboard'||id==='admin'?'flex':'block'
+  sec.classList.add('active')
+  const map={marketing:0,public:1,dashboard:2,admin:3}
+  document.querySelectorAll('.top-btn')[map[id]]?.classList.add('active')
+  if(id==='dashboard') initDashboard()
+  if(id==='admin') initAdmin()
+}
+
+// ══════════════════════════════════════
+// EVENTS GRID
+// ══════════════════════════════════════
+function renderEvents(){
+  const t=T[lang]
+  const grid=document.getElementById('eventsGrid')
+  if(!grid) return
+  grid.innerHTML=''
+  EVENTS.forEach((ev,i)=>{
+    const isSold=ev.badge==='sold'
+    const pct=Math.round((ev.sold/ev.cap)*100)
+    const rem=ev.cap-ev.sold
+    const card=document.createElement('div')
+    card.className=`event-card${ev.featured?' featured':''}${isSold?' sold-out':''}`
+    card.innerHTML=`
+      <div style="width:100%;aspect-ratio:${ev.featured?'16/9':'4/3'};background:${ev.grad};position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:${ev.featured?'110px':'70px'};color:white;opacity:0.07;letter-spacing:8px;white-space:nowrap">${ev.genre.toUpperCase()}</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(201,168,76,0.18) 0%,transparent 60%)"></div>
+      </div>
+      <div class="event-overlay"></div>
+      <div class="event-content">
+        <div class="event-badges">
+          ${ev.badge==='sold'?`<span class="badge badge-sold">${t.sold}</span>`:
+            ev.badge==='last'?'<span class="badge badge-pending">⚡ ÚLTIMAS</span>':
+            ev.badge==='new'?'<span class="badge badge-new">● NEW</span>':
+            ev.badge==='vip'?'<span class="badge badge-vip">★ VIP</span>':''}
+          <span class="badge badge-genre">${ev.genre}</span>
+        </div>
+        <div class="event-date">${ev.date} · ${ev.time}</div>
+        <div class="event-name">${ev.name}</div>
+        <div class="event-dj">${ev.dj}</div>
+        <div class="event-footer">
+          <div class="event-price">${isSold?`<span style="font-size:14px;color:var(--muted)">${t.sold}</span>`:`<span style="font-size:11px;font-family:'DM Sans',sans-serif;font-weight:400">${t.from} </span>${ev.early}€`}</div>
+          ${!isSold?`<button onclick="openModal(${ev.id})" style="background:var(--gold);color:var(--bg);border:none;padding:8px 16px;font-family:'DM Mono',monospace;font-weight:700;font-size:9px;letter-spacing:2px;cursor:pointer;text-transform:uppercase">🎟 ${t.buy_ticket}</button>`:''}
+        </div>
+        ${!isSold?`<div class="cap-bar"><div class="cap-fill" style="width:${pct}%;background:var(--gold)"></div></div><div class="cap-text">${rem} plazas · ${pct}% lleno</div>`:''}
+      </div>
+    `
+    if(!isSold) card.addEventListener('click',e=>{if(!e.target.tagName.match(/BUTTON/i))openModal(ev.id)})
+    grid.appendChild(card)
+  })
+}
+
+// ══════════════════════════════════════
+// PHOTOS GRID
+// ══════════════════════════════════════
+function renderPhotos(){
+  const grid=document.getElementById('photosGrid')
+  if(!grid) return
+  const photos=[
+    {label:'TECHNO NIGHT',date:'15 MAR',grad:'linear-gradient(135deg,#1a0533,#2d0a5e)',n:87},
+    {label:'HOUSE SESSION',date:'14 MAR',grad:'linear-gradient(135deg,#0a1628,#1e3a5f)',n:54},
+    {label:'OPENING NIGHT',date:'08 MAR',grad:'linear-gradient(135deg,#1f0a0a,#4a1010)',n:112},
+    {label:'REGGAETON',date:'07 MAR',grad:'linear-gradient(135deg,#0a1a0a,#1a3d1a)',n:43},
+    {label:'MINIMAL RAVE',date:'01 MAR',grad:'linear-gradient(135deg,#1a1200,#3d2d00)',n:76},
+    {label:'B2B NIGHT',date:'22 FEB',grad:'linear-gradient(135deg,#0a0a1a,#1a0a3d)',n:91},
+    {label:'DEEP HOUSE',date:'15 FEB',grad:'linear-gradient(135deg,#0d1a2e,#1a3d5f)',n:38},
+    {label:'VIP NIGHT',date:'08 FEB',grad:'linear-gradient(135deg,#1a0a1a,#4a1060)',n:65},
+  ]
+  grid.innerHTML=photos.map(p=>`
+    <div style="position:relative;aspect-ratio:1/1;background:${p.grad};overflow:hidden;cursor:pointer" 
+         onmouseenter="this.querySelector('.ph-info').style.opacity='1';this.querySelector('.ph-info').style.transform='translateY(0)'"
+         onmouseleave="this.querySelector('.ph-info').style.opacity='0';this.querySelector('.ph-info').style.transform='translateY(8px)'">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.12">📸</div>
+      <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);padding:3px 7px;font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:1px">+${p.n} FOTOS</div>
+      <div class="ph-info" style="position:absolute;bottom:0;left:0;right:0;padding:14px;background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);opacity:0;transform:translateY(8px);transition:all 0.3s">
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:2px">${p.date}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px">${p.label}</div>
+      </div>
+    </div>
+  `).join('')
+}
+
+// ══════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════
+function openModal(id){
+  const ev=EVENTS.find(e=>e.id===id)
+  if(!ev) return
+  const t=T[lang]
+  document.getElementById('modalGenre').textContent=ev.genre.toUpperCase()
+  document.getElementById('modalDate2').textContent=ev.date+' · '+ev.time
+  document.getElementById('modalTitle').textContent=ev.name
+  document.getElementById('modalDj').textContent='▶ '+ev.dj
+  document.getElementById('modalInfo').innerHTML=[
+    {l:'Género',v:ev.genre},{l:'Venue',v:'Gallery Club'},
+    {l:'Aforo',v:ev.cap+' personas'},{l:'Disponibles',v:(ev.cap-ev.sold)+' entradas'}
+  ].map(i=>`<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:12px 14px"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">${i.l}</div><div style="font-size:12px;font-weight:600">${i.v}</div></div>`).join('')
+  document.getElementById('ticketOptions').innerHTML=[
+    {key:'early',label:t.from+' Early Bird',sub:'Limitado · Oferta especial',price:ev.early},
+    {key:'normal',label:'Entrada Normal',sub:'Entrada general',price:ev.price,sel:true},
+    {key:'vip',label:'★ VIP',sub:'Mesa + botella incluida',price:ev.vip},
+  ].map(o=>`<div class="ticket-option${o.sel?' selected':''}" onclick="selectTicket(this)"><div><div style="font-size:12px;font-weight:600">${o.label}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px">${o.sub}</div></div><div class="ticket-opt-price">${o.price}€</div></div>`).join('')
+  document.getElementById('modalBuyBtn').textContent=t.buy_ticket
+  document.getElementById('modalOverlay').classList.add('open')
+  document.body.style.overflow='hidden'
+}
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modalOverlay')&&!e.target.classList.contains('modal-close')) return
+  document.getElementById('modalOverlay').classList.remove('open')
+  document.body.style.overflow=''
+}
+function selectTicket(el){document.querySelectorAll('.ticket-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected')}
+function showLoyalty(){alert('Page programme VIP — Consulte vos points de fidélité')}
+function showReventa(){alert('Page revente — Achetez ou vendez des billets entre clients')}
+
+// ══════════════════════════════════════
+// DASHBOARD CLUB
+// ══════════════════════════════════════
+const DASH_VIEWS = {
+  overview:`
+    <div class="kpi-grid">
+      <div class="kpi" style="animation-delay:0.05s"><div class="kpi-label">Entradas vendidas</div><div class="kpi-value" style="color:var(--gold)">247</div><div class="kpi-change up">↑ +18% esta semana</div><div class="kpi-glow" style="background:var(--gold)"></div></div>
+      <div class="kpi" style="animation-delay:0.1s"><div class="kpi-label">Ingresos hoy</div><div class="kpi-value" style="color:var(--green)">4.235€</div><div class="kpi-change up">↑ +12% esta semana</div><div class="kpi-glow" style="background:var(--green)"></div></div>
+      <div class="kpi" style="animation-delay:0.15s"><div class="kpi-label">Reservas pendientes</div><div class="kpi-value" style="color:var(--orange)">3</div><div class="kpi-change down">↓ Por confirmar</div><div class="kpi-glow" style="background:var(--orange)"></div></div>
+      <div class="kpi" style="animation-delay:0.2s"><div class="kpi-label">Suscriptores</div><div class="kpi-value" style="color:var(--blue)">1.482</div><div class="kpi-change up">↑ +34 esta semana</div><div class="kpi-glow" style="background:var(--blue)"></div></div>
+    </div>
+    <div class="grid-3-1">
+      <div class="panel" style="animation-delay:0.25s">
+        <div class="panel-header"><div class="panel-title">Ventas — últimos 7 días</div><button class="panel-action">exportar →</button></div>
+        <div class="chart-bars" id="chartMain"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">${['LUN','MAR','MIÉ','JUE','VIE','SAB','HOY'].map(d=>`<span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted2);flex:1;text-align:center">${d}</span>`).join('')}</div>
+      </div>
+      <div class="panel" style="animation-delay:0.3s">
+        <div class="panel-title">Capacidad esta noche</div>
+        <div class="ring-wrap">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="var(--gold)" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="51" transform="rotate(-90 40 40)" stroke-linecap="round"/>
+          </svg>
+          <div class="ring-info"><div class="ring-pct" style="color:var(--gold)">75%</div><div class="ring-label">Ocupación</div><div class="ring-detail">300/400 entradas</div></div>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          ${[['NORMAL','220'],['EARLY BIRD','50'],['★ VIP','30']].map(([l,v],i)=>`<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-family:'DM Mono',monospace;font-size:8px;color:${i===2?'var(--gold)':'var(--muted)'};letter-spacing:1px">${l}</span><span style="font-family:'DM Mono',monospace;font-size:8px;color:${i===2?'var(--gold)':'var(--white)'}">${v}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="panel" style="animation-delay:0.35s">
+        <div class="panel-header"><div class="panel-title">Próximos eventos</div><button class="panel-action" onclick="switchDash('events',document.querySelector('.nav-item:nth-child(2)'))">ver todos →</button></div>
+        ${EVENTS.slice(0,4).map((ev,i)=>{const colors=['var(--gold)','var(--blue)','var(--green)','var(--orange)'];const c=colors[i%4];const pct=Math.round((ev.sold/ev.cap)*100);return`<div class="event-row"><div class="event-dot" style="background:${c}"></div><div class="event-row-info"><div class="event-row-name">${ev.name}</div><div class="event-row-meta">${ev.date} · ${ev.dj.substring(0,20)}...</div></div><div class="event-row-stats"><div class="event-row-tickets" style="color:${c}">${ev.sold}</div><div class="event-row-rev">${(ev.sold*ev.price).toLocaleString()}€</div><div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:${c}"></div></div></div></div>`}).join('')}
+      </div>
+      <div class="panel" style="animation-delay:0.4s">
+        <div class="panel-header"><div class="panel-title">Reservas recientes</div></div>
+        ${[{n:'Sofia R.',d:'Mesa VIP · 4 pers · SAB 29',s:'vip'},{n:'Marcus T.',d:'General · 2 pers · VIE 28',s:'confirmed'},{n:'Ana M.',d:'General · 3 pers · SAB 29',s:'pending'},{n:'Javi L.',d:'Mesa VIP · 6 pers · SAB 5',s:'pending'}].map(r=>`<div class="resa-row"><div class="resa-avatar">👤</div><div><div class="resa-name">${r.n}</div><div class="resa-detail">${r.d}</div></div><span class="badge badge-${r.s}">${r.s==='vip'?'★ VIP':r.s==='confirmed'?'Confirmado':'Pendiente'}</span></div>`).join('')}
+      </div>
+    </div>`,
+
+  events:`
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Crear nuevo evento</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          ${[['Nombre del evento','TECHNO NIGHT','text','span 2'],['DJ / Artista','Charlotte de Witte','text','span 1'],['Fecha','','date','span 1'],['Hora inicio','23:00','time','span 1'],['Género','','select','span 1'],['Precio Normal','15','number','span 1'],['Early Bird','10','number','span 1'],['Precio VIP','120','number','span 1'],['Aforo máximo','400','number','span 1'],['Descripción','Una noche increíble...','text','span 2']].map(([l,p,t,gc])=>`<div style="grid-column:${gc}"><label class="form-label">${l}</label>${t==='select'?`<select class="form-input"><option>Techno</option><option>House</option><option>Afro House</option><option>Tech House</option><option>Reggaeton</option><option>Minimal</option></select>`:`<input class="form-input" type="${t}" placeholder="${p}">`}</div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-gold">Publicar evento</button>
+          <button class="btn-ghost">Guardar borrador</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Eventos activos (${EVENTS.length})</div>
+        ${EVENTS.map((ev,i)=>{const colors=['var(--gold)','var(--blue)','var(--red)','var(--green)','var(--orange)','var(--blue)'];const c=colors[i%6];return`<div class="event-row"><div class="event-dot" style="background:${c}"></div><div class="event-row-info"><div class="event-row-name">${ev.name}</div><div class="event-row-meta">${ev.date} · ${ev.sold}/${ev.cap} entradas · ${ev.price}€</div></div><div style="display:flex;gap:5px"><button class="btn-sm" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)">Editar</button><button class="btn-sm" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(224,82,82,0.2)">✕</button></div></div>`}).join('')}
+      </div>
+    </div>`,
+
+  reservations:`
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Todas las reservas</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--orange);letter-spacing:1px">3 PENDIENTES</span></div>
+      ${[{n:'Sofia R.',d:'Mesa VIP · 4 pers · SAB 29 MAR · Techno Night',s:'vip'},{n:'Marcus T.',d:'General · 2 pers · VIE 28 MAR · House Sessions',s:'confirmed'},{n:'Ana M.',d:'General · 3 pers · SAB 29 MAR · Techno Night',s:'pending'},{n:'Javi L.',d:'Mesa VIP · 6 pers · SAB 5 ABR · Opening Party',s:'pending'},{n:'Laura K.',d:'General · 2 pers · VIE 28 MAR · House Sessions',s:'pending'}].map(r=>`<div class="resa-row"><div class="resa-avatar">👤</div><div style="flex:1"><div class="resa-name">${r.n}</div><div class="resa-detail">${r.d}</div></div><span class="badge badge-${r.s}">${r.s==='vip'?'★ VIP':r.s==='confirmed'?'Confirmado':'Pendiente'}</span>${r.s==='pending'?'<button class="btn-sm" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2);margin-left:6px">✓</button>':''}</div>`).join('')}
+    </div>`,
+
+  scanner:`
+    <div class="grid-2">
+      <div class="panel" style="text-align:center;padding:28px">
+        <div class="scan-result scan-ok">✔ &nbsp;VÁLIDO — Carlos M. · Techno Night · NORMAL</div>
+        <div class="scan-result scan-err">✕ &nbsp;RECHAZADO — Entrada ya utilizada</div>
+        <div class="scanner-box"><div class="scan-line"></div><div style="font-size:32px;opacity:0.3">⬛</div></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:5px">SCANNER QR</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:18px">Apunta la cámara al código QR</div>
+        <button class="btn-gold" style="width:100%;padding:11px;font-size:10px">▶ Activar Cámara</button>
+        <div class="scan-counts">
+          <div><div class="scan-num" style="color:var(--green)">143</div><div class="scan-lbl">Válidas</div></div>
+          <div><div class="scan-num" style="color:var(--red)">4</div><div class="scan-lbl">Rechazadas</div></div>
+          <div><div class="scan-num" style="color:var(--muted)">153</div><div class="scan-lbl">Restantes</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Últimos scans</div>
+        ${[{n:'Carlos M.',t:'23:47',ok:true,tipo:'NORMAL'},{n:'Sofia R.',t:'23:45',ok:true,tipo:'VIP'},{n:'DESCONOCIDO',t:'23:44',ok:false,tipo:'—'},{n:'Marcus T.',t:'23:42',ok:true,tipo:'EARLY'},{n:'Ana M.',t:'23:41',ok:true,tipo:'NORMAL'},{n:'DUPLICADO',t:'23:39',ok:false,tipo:'—'}].map(s=>`<div class="resa-row"><div class="resa-avatar" style="${s.ok?'background:var(--green-dim);border-color:rgba(62,207,142,0.3)':'background:var(--red-dim);border-color:rgba(224,82,82,0.3)'}">${s.ok?'✔':'✕'}</div><div style="flex:1"><div class="resa-name">${s.n}</div><div class="resa-detail">${s.t} · TECHNO NIGHT · ${s.tipo}</div></div><span class="badge badge-${s.ok?'confirmed':'sold'}">${s.ok?'VÁLIDO':'RECHAZADO'}</span></div>`).join('')}
+      </div>
+    </div>`,
+
+  newsletter:`
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Enviar newsletter</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+          <div class="nl-stat"><div class="nl-num">1.482</div><div class="nl-lbl">Suscriptores</div></div>
+          <div class="nl-stat"><div class="nl-num" style="color:var(--green)">68%</div><div class="nl-lbl">Tasa apertura</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+          <div><label class="form-label">Asunto del email</label><input class="form-input" placeholder="🔥 Esta semana en Gallery Club..."></div>
+          <div><label class="form-label">Evento destacado</label><select class="form-input"><option>TECHNO NIGHT — 29 MAR</option><option>HOUSE SESSIONS — 28 MAR</option></select></div>
+          <div><label class="form-label">Mensaje</label><textarea class="form-input" rows="3" placeholder="No te pierdas la noche más grande..."></textarea></div>
+        </div>
+        <button class="btn-gold" style="width:100%;padding:12px;font-size:10px">✉ Enviar a 1.482 personas</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Historial de envíos</div>
+        ${[{s:'🔥 Techno Night con Charlotte de Witte',d:'20 MAR',n:1482,o:68},{s:'Black Coffee llega a Málaga 🎵',d:'13 MAR',n:1448,o:71},{s:'Programa VIP — Temporada 2026',d:'6 MAR',n:1401,o:55}].map(n=>`<div class="event-row"><div style="flex:1;min-width:0"><div class="event-row-name" style="font-size:11px">${n.s}</div><div class="event-row-meta">${n.d} · ${n.n} enviados</div></div><span class="badge badge-confirmed" style="flex-shrink:0">${n.o}% abierto</span></div>`).join('')}
+      </div>
+    </div>`,
+
+  predictions:`
+    <div>
+      ${EVENTS.slice(0,3).map(ev=>{const conf=Math.random()>0.5?'haute':'moyenne';const pred=Math.round(ev.cap*0.72);const rev=pred*ev.price;return`<div class="pred-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:3px">${ev.name}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">${ev.date}</div></div>
+          <span class="badge badge-${conf==='haute'?'confirmed':'pending'}">Confianza ${conf}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+          ${[[pred,'Entradas previstas','var(--gold)'],[rev+'€','Ingresos previstos','var(--green)'],['72%','Tasa de llenado','var(--blue)']].map(([v,l,c])=>`<div style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:${c};letter-spacing:2px;line-height:1">${v}</div><div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px">${l}</div></div>`).join('')}
+        </div>
+        <div class="pred-rec"><div style="color:var(--gold)">→</div><div style="font-size:11px;color:var(--muted)">Lanzar newsletter en 3 días para maximizar Early Bird</div></div>
+        <div class="pred-rec"><div style="color:var(--gold)">→</div><div style="font-size:11px;color:var(--muted)">Alta demanda histórica — considera subir precio VIP</div></div>
+      </div>`}).join('')}
+    </div>`,
+
+  loyalty:`
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Top clientes por puntos</div>
+        ${[{n:'Sofia R.',pts:847,soirees:8,badge:'★ VIP'},{n:'Carlos M.',pts:647,soirees:6,badge:'Fiel'},{n:'Marcus T.',pts:447,soirees:4,badge:'Regular'},{n:'Ana M.',pts:247,soirees:2,badge:'Nuevo'},{n:'Laura K.',pts:147,soirees:1,badge:'Nuevo'}].map((c,i)=>{const colors=['var(--gold)','var(--blue)','var(--green)','var(--orange)','var(--muted)'];return`<div class="resa-row"><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${colors[i]};width:20px;text-align:center;flex-shrink:0">${i+1}</div><div class="resa-avatar">${i===0?'👑':'👤'}</div><div style="flex:1"><div class="resa-name">${c.n}</div><div class="resa-detail">${c.soirees} noches · ${c.badge}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${colors[i]};letter-spacing:1px">${c.pts} pts</div></div>`}).join('')}
+      </div>
+      <div class="panel">
+        <div class="panel-title">Recompensas activas</div>
+        ${[{n:'Entrada gratis',desc:'1 entrada normal gratuita',pts:500,tipo:'entree_gratuite'},{n:'50% descuento',desc:'50% en tu próxima entrada',pts:250,tipo:'reduction'},{n:'Upgrade VIP',desc:'Upgrade a entrada VIP gratuito',pts:400,tipo:'vip_upgrade'}].map(r=>`<div class="reward-item"><div><div style="font-size:12px;font-weight:600;margin-bottom:3px">${r.n}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px">${r.desc}</div></div><div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:1px">${r.pts} pts</div><button class="btn-sm" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(224,82,82,0.2);margin-top:4px">Desactivar</button></div></div>`).join('')}
+        <button class="btn-gold" style="width:100%;margin-top:12px;padding:10px;font-size:9px">+ Añadir recompensa</button>
+      </div>
+    </div>`,
+
+  resale:`
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Entradas en reventa</div>
+        <div style="padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px">🔒</div>
+          <div><div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:2px">Reventa segura HonoPs</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px">QR transferido automáticamente al comprador. 2% comisión.</div></div>
+        </div>
+        ${[{n:'Techno Night · Normal',vendeur:'Carlos M.',price:18,time:'Hace 2h'},{n:'House Sessions · VIP',vendeur:'Ana M.',price:120,time:'Hace 5h'},{n:'Opening Party · Normal',vendeur:'Laura K.',price:25,time:'Hace 1d'}].map(r=>`<div class="revente-card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:600;margin-bottom:3px">${r.n}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px">Por ${r.vendeur} · ${r.time}</div></div><div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:1px">${r.price}€</div><div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted)">+${(r.price*0.02).toFixed(2)}€ comisión</div></div></div></div>`).join('')}
+      </div>
+      <div class="panel">
+        <div class="panel-title">Estadísticas de reventa</div>
+        ${[['Reventas este mes','12','var(--gold)'],['Comisiones ganadas','34.20€','var(--green)'],['Precio medio reventa','18.50€','var(--blue)'],['Tasa de reventa','4.8%','var(--orange)']].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">${l}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${c};letter-spacing:1px">${v}</span></div>`).join('')}
+      </div>
+    </div>`,
+
+  stats:`
+    <div class="kpi-grid" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">Ingresos este mes</div><div class="kpi-value" style="color:var(--gold)">18.4K€</div><div class="kpi-change up">↑ +22%</div></div>
+      <div class="kpi"><div class="kpi-label">Total entradas</div><div class="kpi-value" style="color:var(--green)">1.847</div><div class="kpi-change up">↑ +15%</div></div>
+      <div class="kpi"><div class="kpi-label">Ticket medio</div><div class="kpi-value" style="color:var(--blue)">17.2€</div><div class="kpi-change up">↑ +3%</div></div>
+      <div class="kpi"><div class="kpi-label">Tasa conversión</div><div class="kpi-value" style="color:var(--orange)">34%</div><div class="kpi-change down">↓ -2%</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Ingresos por evento — Marzo 2026</div>
+      <div class="chart-bars" id="statsChart" style="height:110px;margin-bottom:8px"></div>
+    </div>`,
+
+  billing:`
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Tu suscripción actual</div>
+        <div style="padding:20px;background:var(--green-dim);border:1px solid rgba(62,207,142,0.2);margin-bottom:16px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--green);margin-bottom:8px">TRIAL ACTIVO</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--green);letter-spacing:4px;line-height:1;margin-bottom:4px">67</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px">DÍAS RESTANTES</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          ${[['Plan','HonoPs Pro'],['Precio después del trial','200€/mes'],['Próximo cobro','1 Junio 2026'],['Entradas vendidas','247'],['Comisiones generadas','4.94€']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">${l}</span><span style="font-size:12px;font-weight:600">${v}</span></div>`).join('')}
+        </div>
+        <button class="btn-gold" style="width:100%;padding:11px;font-size:10px">Añadir tarjeta de crédito</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Historial de pagos</div>
+        <div style="text-align:center;padding:32px 0;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:1px">
+          Aún en período de prueba.<br>El primer cargo será el 1 Junio 2026.
+        </div>
+      </div>
+    </div>`,
+}
+
+function initDashboard(){
+  document.getElementById('dashDate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()
+  switchDash('overview',document.querySelector('#section-dashboard .nav-item'))
+}
+
+function switchDash(name,navEl){
+  document.querySelectorAll('#section-dashboard .nav-item').forEach(n=>n.classList.remove('active'))
+  if(navEl) navEl.classList.add('active')
+  const titles={overview:'DASHBOARD',events:'EVENTOS',reservations:'RESERVAS',scanner:'SCANNER QR',newsletter:'NEWSLETTER',predictions:'PREDICCIONES',loyalty:'PROGRAMA VIP',resale:'REVENTA',stats:'ESTADÍSTICAS',billing:'MI SUSCRIPCIÓN'}
+  document.getElementById('dashTitle').textContent=titles[name]||name.toUpperCase()
+  document.getElementById('dashContent').innerHTML=DASH_VIEWS[name]||'<div class="panel"><div class="panel-title">En desarrollo</div></div>'
+  // Post-render
+  if(name==='overview') renderChartMain()
+  if(name==='stats') renderStatsChart()
+}
+
+function renderChartMain(){
+  const el=document.getElementById('chartMain')
+  if(!el) return
+  const data=[45,82,38,120,210,285,247]
+  const max=Math.max(...data)
+  el.innerHTML=data.map((v,i)=>`<div class="bar-wrap"><div class="bar-val">${v}</div><div class="bar ${i===6?'today':''}" style="height:${Math.round(v/max*100)}%;background:${i===6?'var(--gold)':'rgba(201,168,76,0.25)'};border:1px solid ${i===6?'var(--gold)':'rgba(201,168,76,0.35)'}"></div></div>`).join('')
+}
+
+function renderStatsChart(){
+  const el=document.getElementById('statsChart')
+  if(!el) return
+  const data=[{l:'TECHNO',v:5400,c:'var(--gold)'},{l:'HOUSE',v:3600,c:'var(--blue)'},{l:'REGGAE',v:2100,c:'var(--green)'},{l:'MINIMAL',v:4200,c:'var(--orange)'},{l:'OPENING',v:3100,c:'var(--red)'}]
+  const max=Math.max(...data.map(d=>d.v))
+  el.innerHTML=data.map(d=>`<div class="bar-wrap"><div class="bar-val" style="color:${d.c}">${(d.v/1000).toFixed(1)}K€</div><div class="bar" style="height:${Math.round(d.v/max*100)}%;background:${d.c}22;border:1px solid ${d.c}44"></div><div class="bar-lbl" style="color:${d.c}88">${d.l}</div></div>`).join('')
+}
+
+// ══════════════════════════════════════
+// SUPER ADMIN
+// ══════════════════════════════════════
+const ADMIN_VIEWS = {
+  overview:`
+    <div style="padding:10px 14px;background:var(--red-dim);border:1px solid rgba(224,82,82,0.25);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;animation:fadeUp 0.3s ease">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1s infinite"></div><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--red);letter-spacing:1px">1 CLUB EN RETARD DE PAIEMENT — DISCOTECA ANDÉN — 9 JOURS</span></div>
+      <button class="btn-sm" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(224,82,82,0.3)" onclick="switchAdmin('finances',document.querySelector('.admin-nav-item:nth-child(4)'))">Voir →</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi" style="animation-delay:0.05s"><div class="kpi-label">Clubs actifs</div><div class="kpi-value" style="color:var(--green)">3</div><div class="kpi-change up">↑ +1 cette semaine</div><div class="kpi-glow" style="background:var(--green)"></div></div>
+      <div class="kpi" style="animation-delay:0.1s"><div class="kpi-label">MRR récurrent</div><div class="kpi-value" style="color:var(--gold)">600€</div><div class="kpi-change up">↑ En croissance</div><div class="kpi-glow" style="background:var(--gold)"></div></div>
+      <div class="kpi" style="animation-delay:0.15s"><div class="kpi-label">Total billets vendus</div><div class="kpi-value" style="color:var(--blue)">1.859</div><div class="kpi-change up">↑ +247 ce mois</div><div class="kpi-glow" style="background:var(--blue)"></div></div>
+      <div class="kpi" style="animation-delay:0.2s"><div class="kpi-label">Volume total</div><div class="kpi-value" style="color:var(--orange)">41.1K€</div><div class="kpi-change up">↑ Billets via HonoPs</div><div class="kpi-glow" style="background:var(--orange)"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${[['Trial','2','var(--blue)','◎'],['Actifs','3','var(--green)','✓'],['En retard','1','var(--red)','⚠'],['Annulés','0','var(--muted2)','✕']].map(([l,v,c,ic])=>`<div style="background:var(--card);border:1px solid ${l==='En retard'?'rgba(224,82,82,0.25)':'var(--border)'};padding:14px;display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;background:${c}15;border:1px solid ${c}30;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:${c};flex-shrink:0">${ic}</div><div><div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${c};letter-spacing:2px;line-height:1">${v}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px">${l}</div></div></div>`).join('')}
+    </div>
+    <div class="grid-3-1">
+      <div class="panel" style="animation-delay:0.3s">
+        <div class="panel-header"><div class="panel-title">Volume billets — 6 derniers mois</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:2px">41.1K€ TOTAL</div></div>
+        <div class="chart-bars" id="adminChart"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">${['OCT','NOV','DÉC','JAN','FÉV','MAR'].map(m=>`<span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted2);flex:1;text-align:center">${m}</span>`).join('')}</div>
+      </div>
+      <div class="panel" style="animation-delay:0.35s">
+        <div class="panel-title">Projection MRR</div>
+        ${[[3,'Aujourd\'hui','var(--gold)'],[10,'À 10 clubs','var(--green)'],[25,'À 25 clubs','var(--blue)'],[50,'À 50 clubs','var(--orange)']].map(([n,l,c])=>`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">${l}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${c};letter-spacing:1px">${(n*200).toLocaleString()}€/mois</span></div><div class="progress"><div class="progress-fill" style="width:${Math.min(n/50*100,100)}%;background:${c}"></div></div></div>`).join('')}
+      </div>
+    </div>`,
+
+  clubs:`
+    <div style="background:var(--card);border:1px solid var(--border)">
+      <div class="table-header" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 100px">
+        ${['Club','Ville','Statut','Jours','Inscrit','Actions'].map(h=>`<div class="th">${h}</div>`).join('')}
+      </div>
+      ${CLUBS_DATA.map(club=>{
+        const sc={active:{bg:'var(--green-dim)',border:'rgba(62,207,142,0.2)',color:'var(--green)',label:'ACTIF'},trial:{bg:'var(--blue-dim)',border:'rgba(91,156,246,0.2)',color:'var(--blue)',label:'TRIAL'},past_due:{bg:'var(--red-dim)',border:'rgba(224,82,82,0.2)',color:'var(--red)',label:'EN RETARD'},cancelled:{bg:'rgba(255,255,255,0.03)',border:'var(--border)',color:'var(--muted)',label:'ANNULÉ'}}
+        const s=sc[club.statut]||sc.trial
+        return`<div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 100px">
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;background:${club.couleur}20;border:1px solid ${club.couleur}40;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">🎵</div><div><div style="font-size:12px;font-weight:600">${club.nom}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:1px">honops.es/${club.slug}</div></div></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${club.ville}</div>
+          <div><span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 7px;background:${s.bg};border:1px solid ${s.border};color:${s.color};text-transform:uppercase">${s.label}</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:${club.statut==='past_due'?'var(--red)':club.statut==='trial'?'var(--blue)':'var(--green)'}">${club.statut==='trial'?club.trial_days+'j restants':club.statut==='past_due'?'⚠ '+club.past_due+'j retard':club.statut==='active'?'✓ OK':'—'}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted2)">${club.inscrit}</div>
+          <div style="display:flex;gap:4px"><button class="btn-sm" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)" title="Voir site">↗</button><button class="btn-sm" style="background:${club.statut==='cancelled'?'var(--green-dim)':'var(--red-dim)'};color:${club.statut==='cancelled'?'var(--green)':'var(--red)'};border:1px solid ${club.statut==='cancelled'?'rgba(62,207,142,0.2)':'rgba(224,82,82,0.2)'}">${club.statut==='cancelled'?'✓':'✕'}</button></div>
+        </div>`}).join('')}
+    </div>`,
+
+  finances:`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      ${[['MRR actuel','600€','3 clubs payants','var(--gold)'],['MRR potentiel','1.000€','Si tous les trials convertissent','var(--green)'],['À risque','200€','1 club en retard','var(--red)']].map(([l,v,s,c])=>`<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-value" style="color:${c}">${v}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px">${s}</div></div>`).join('')}
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(224,82,82,0.2);padding:20px;margin-bottom:12px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px"><div style="width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1s infinite"></div>CLUBS EN RETARD — ACTION REQUISE</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+        <div><div style="font-size:12px;font-weight:600;margin-bottom:3px">Discoteca Andén</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--red);letter-spacing:1px">9 JOURS DE RETARD · VENTE BLOQUÉE</div></div>
+        <div style="display:flex;gap:6px"><button class="btn-sm" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(224,82,82,0.2)">✉ Relancer</button><button class="btn-sm" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2)">✓ Réactiver</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Tous les abonnements</div>
+      ${CLUBS_DATA.map(club=>{const c={active:'var(--green)',trial:'var(--blue)',past_due:'var(--red)',cancelled:'var(--muted2)'}[club.statut];const v={active:'200€/mois',trial:'TRIAL',past_due:'EN RETARD',cancelled:'ANNULÉ'}[club.statut];return`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0"></div><div><div style="font-size:12px;font-weight:600">${club.nom}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:1px">${club.ville}</div></div></div><div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${c};letter-spacing:1px">${v}</div></div></div>`}).join('')}
+    </div>`,
+
+  tickets:`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${[['Total billets','1.859','var(--gold)'],['Volume total','41.1K€','var(--green)'],['Ticket moyen','22.1€','var(--blue)'],['Taux utilisation','31%','var(--orange)']].map(([l,v,c])=>`<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-value" style="color:${c}">${v}</div></div>`).join('')}
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:12px">
+      <div class="panel-title">Répartition par type</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        ${[['Early Bird',312,'var(--green)',17],['Normal',1247,'var(--gold)',67],['VIP',300,'var(--orange)',16]].map(([l,n,c,p])=>`<div style="padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${c};letter-spacing:2px;line-height:1;margin-bottom:4px">${n}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${l}</div><div class="progress"><div class="progress-fill" style="width:${p}%;background:${c}"></div></div><div style="font-family:'DM Mono',monospace;font-size:8px;color:${c};margin-top:4px">${p}%</div></div>`).join('')}
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);padding:20px">
+      <div class="panel-title">Derniers billets (toute la plateforme)</div>
+      <div class="table-header" style="grid-template-columns:2fr 2fr 1fr 1fr 1fr 70px;margin:0 -20px;padding:8px 20px">
+        ${['Client','Événement','Type','Prix','Date','Statut'].map(h=>`<div class="th">${h}</div>`).join('')}
+      </div>
+      ${TICKETS_DATA.map(t=>`<div class="table-row" style="grid-template-columns:2fr 2fr 1fr 1fr 1fr 70px;margin:0 -20px;padding:11px 20px"><div><div style="font-size:11px;font-weight:600">${t.nom}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:1px">${t.email}</div></div><div><div style="font-size:11px">${t.event}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:1px;margin-top:1px">${t.club}</div></div><div style="font-family:'DM Mono',monospace;font-size:9px;color:${t.type==='vip'?'var(--orange)':'var(--muted)'};letter-spacing:1px;text-transform:uppercase">${t.type}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:1px">${t.prix}€</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted2)">${t.date}</div><div><span style="font-family:'DM Mono',monospace;font-size:7px;padding:2px 6px;background:${t.utilise?'rgba(255,255,255,0.05)':'var(--green-dim)'};border:1px solid ${t.utilise?'var(--border)':'rgba(62,207,142,0.2)'};color:${t.utilise?'var(--muted)':'var(--green)'}">${t.utilise?'Utilisé':'Valide'}</span></div></div>`).join('')}
+    </div>`,
+
+  stats:`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${[['Taux conversion','60%','Trial → Payant','var(--green)'],['Revenu/club moy.','8.220€','Billets générés','var(--gold)'],['Billets/club moy.','310','Moyenne plateforme','var(--blue)'],['Croissance MRR','+200€','Ce mois','var(--orange)']].map(([l,v,s,c])=>`<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-value" style="color:${c}">${v}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px">${s}</div></div>`).join('')}
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Clubs — Revenus générés</div>
+        ${CLUBS_DATA.filter(c=>c.revenus>0).sort((a,b)=>b.revenus-a.revenus).map((c,i)=>{const max=22250;const pct=Math.round(c.revenus/max*100);return`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><div><div style="font-size:12px;font-weight:600">${i+1}. ${c.nom}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:1px">${c.billets} billets</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${c.couleur};letter-spacing:1px">${c.revenus.toLocaleString()}€</div></div><div class="progress"><div class="progress-fill" style="width:${pct}%;background:${c.couleur}"></div></div></div>`}).join('')}
+      </div>
+      <div class="panel">
+        <div class="panel-title">Entonnoir de conversion</div>
+        <div style="display:flex;gap:0">
+          ${[[6,'Inscrits','var(--blue)'],[2,'En trial','var(--gold)'],[3,'Payants','var(--green)']].map(([n,l,c],i,a)=>`<div style="flex:1;text-align:center;padding:18px 12px;background:${c}10;border:1px solid ${c}20;margin-left:${i>0?-1:0}px"><div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:${c};letter-spacing:2px;line-height:1">${n}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin:4px 0">${l}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:${c}">${Math.round(n/6*100)}%</div></div>${i<a.length-1?'<div style="display:flex;align-items:center;color:rgba(255,255,255,0.15);font-size:16px;z-index:1">→</div>':''}`).join('')}
+        </div>
+      </div>
+    </div>`,
+
+  notifications:`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${[['Critiques','1','var(--red)'],['Avertissements','1','var(--orange)'],['Bonnes nouvelles','1','var(--green)'],['Informations','1','var(--blue)']].map(([l,v,c])=>`<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-value" style="color:${c}">${v}</div></div>`).join('')}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${[
+        {type:'error',title:'Discoteca Andén — Paiement en retard',detail:'9 jours de retard. Vente bloquée depuis le jour 8.',time:'Il y a 9 jours',bg:'var(--red-dim)',border:'rgba(224,82,82,0.25)',color:'var(--red)',icon:'✕'},
+        {type:'warning',title:'Sala Gold — Trial expire dans 12 jours',detail:'Contacter pour convertir en abonnement payant.',time:'12 jours restants',bg:'var(--orange-dim)',border:'rgba(240,136,74,0.25)',color:'var(--orange)',icon:'⚠'},
+        {type:'success',title:'Nouveau club inscrit — Joy Eslava',detail:'Madrid · Trial 90 jours démarré',time:'22 Mar 2026',bg:'var(--green-dim)',border:'rgba(62,207,142,0.25)',color:'var(--green)',icon:'✓'},
+        {type:'info',title:'28 billets vendus en 24h',detail:'Volume total : 510€ sur toute la plateforme',time:'Dernières 24h',bg:'var(--blue-dim)',border:'rgba(91,156,246,0.25)',color:'var(--blue)',icon:'◎'},
+      ].map((a,i)=>`<div style="padding:14px 18px;background:${a.bg};border:1px solid ${a.border};display:flex;align-items:center;justify-content:space-between;gap:14px;animation:fadeUp 0.${3+i}s ease both"><div style="display:flex;align-items:center;gap:12px"><div style="width:30px;height:30px;background:${a.color}15;border:1px solid ${a.color}30;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:${a.color};flex-shrink:0">${a.icon}</div><div><div style="font-size:12px;font-weight:600;color:${a.color};margin-bottom:2px">${a.title}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">${a.detail}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted2);letter-spacing:1px">${a.time}</div><button class="btn-sm" style="background:${a.color}15;border:1px solid ${a.color}30;color:${a.color}">✉ Contacter</button></div></div>`).join('')}
+    </div>`,
+
+  support:`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      ${[['Tickets ouverts','2','var(--red)'],['En cours','1','var(--orange)'],['Résolus','5','var(--green)']].map(([l,v,c])=>`<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-value" style="color:${c}">${v}</div></div>`).join('')}
+    </div>
+    <div class="panel">
+      <div class="panel-title">Tickets de support</div>
+      ${[{club:'Gallery Club',sujet:'Comment personnaliser les couleurs du site ?',msg:'Bonjour, j\'aimerais changer la couleur dorée en bleue pour correspondre à notre identité visuelle.',priorite:'normale',statut:'ouvert',date:'22 Mar'},{club:'Sala Gold',sujet:'Problème avec le scanner QR sur iPhone',msg:'Le scanner ne s\'ouvre pas sur Safari iOS 17. Avez-vous une solution ?',priorite:'haute',statut:'en_cours',date:'21 Mar'},{club:'Fabrik',sujet:'Demande d\'export des données clients',msg:'Nous avons besoin d\'un export CSV de tous nos clients pour notre CRM.',priorite:'basse',statut:'resolu',date:'20 Mar'}].map(t=>{const pc={normale:{c:'var(--gold)',bg:'var(--gold-dim)',border:'rgba(201,168,76,0.2)',l:'NORMALE'},haute:{c:'var(--orange)',bg:'var(--orange-dim)',border:'rgba(240,136,74,0.2)',l:'HAUTE'},basse:{c:'var(--muted)',bg:'rgba(255,255,255,0.03)',border:'var(--border)',l:'BASSE'}}[t.priorite];const sc={ouvert:{c:'var(--red)',l:'OUVERT'},en_cours:{c:'var(--orange)',l:'EN COURS'},resolu:{c:'var(--green)',l:'RÉSOLU'}}[t.statut];return`<div style="padding:18px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px"><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap"><span style="font-family:'DM Mono',monospace;font-size:7px;padding:2px 6px;background:${pc.bg};border:1px solid ${pc.border};color:${pc.c};text-transform:uppercase;letter-spacing:1px">${pc.l}</span><span style="font-family:'DM Mono',monospace;font-size:8px;color:${sc.c};letter-spacing:1px">● ${sc.l}</span><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted2);letter-spacing:1px">${t.date}</span></div><div style="font-size:13px;font-weight:600;margin-bottom:3px">${t.sujet}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:1px">${t.club}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${t.statut!=='resolu'?`<button class="btn-sm" style="background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.2)">✉ Répondre</button>`:'<button class="btn-sm" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2)">✓ Résolu</button>'}</div></div><div style="padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.7">${t.msg}</div></div>`}).join('')}
+    </div>`,
+
+  logs:`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${[['Actions aujourd\'hui','7','var(--gold)'],['Billets vendus','3','var(--green)'],['Paiements échoués','1','var(--red)'],['Total événements','7','var(--blue)']].map(([l,v,c])=>`<div class="kpi"><div class="kpi-label">${l}</div><div class="kpi-value" style="color:${c}">${v}</div></div>`).join('')}
+    </div>
+    <div class="panel">
+      <div class="panel-title">Historique complet — 22 Mars 2026</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--gold);text-transform:uppercase">AUJOURD'HUI</div><div style="flex:1;height:1px;background:rgba(201,168,76,0.12)"></div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted2)">${LOGS_DATA.length} actions</span></div>
+      ${LOGS_DATA.map((log,i)=>{const styles={billet_vendu:{c:'var(--gold)',icon:'🎟',l:'BILLET VENDU'},club_inscrit:{c:'var(--green)',icon:'✓',l:'INSCRIPTION'},qr_scanne:{c:'var(--orange)',icon:'⬡',l:'QR SCANNÉ'},paiement_echoue:{c:'var(--red)',icon:'✕',l:'PAIEMENT ÉCHOUÉ'},newsletter_envoyee:{c:'var(--blue)',icon:'✉',l:'NEWSLETTER'},club_reactive:{c:'var(--green)',icon:'▶',l:'RÉACTIVATION'}}[log.action]||{c:'var(--muted)',icon:'◎',l:log.action};return`<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:${i%2===0?'rgba(255,255,255,0.01)':'transparent'}"><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted2);letter-spacing:1px;flex-shrink:0;width:44px">${log.time}</div><div style="width:24px;height:24px;background:${styles.c}15;border:1px solid ${styles.c}25;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:${styles.c};flex-shrink:0">${styles.icon}</div><div style="font-family:'DM Mono',monospace;font-size:7px;letter-spacing:1px;color:${styles.c};text-transform:uppercase;flex-shrink:0;width:90px">${styles.l}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:1px;flex-shrink:0">${log.club}</div><div style="font-size:11px;color:var(--muted);flex:1">${log.detail}</div></div>`}).join('')}
+    </div>`,
+}
+
+function initAdmin(){
+  document.getElementById('adminDate').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()
+  switchAdmin('overview',document.querySelector('#section-admin .admin-nav-item'))
+}
+
+function switchAdmin(name,navEl){
+  document.querySelectorAll('#section-admin .admin-nav-item').forEach(n=>n.classList.remove('active'))
+  if(navEl) navEl.classList.add('active')
+  const titles={overview:'VUE GLOBALE',clubs:'TOUS LES CLUBS',finances:'FINANCES',tickets:'BILLETS GLOBAUX',stats:'STATISTIQUES',notifications:'NOTIFICATIONS',support:'SUPPORT',logs:'LOGS D\'ACTIVITÉ'}
+  document.getElementById('adminTitle').textContent=titles[name]||name.toUpperCase()
+  document.getElementById('adminContent').innerHTML=ADMIN_VIEWS[name]||'<div class="panel"><div class="panel-title">En développement</div></div>'
+  if(name==='overview') renderAdminChart()
+}
+
+function renderAdminChart(){
+  const el=document.getElementById('adminChart')
+  if(!el) return
+  const data=[3200,4800,5100,6400,9200,12400]
+  const max=Math.max(...data)
+  el.innerHTML=data.map((v,i)=>`<div class="bar-wrap"><div class="bar-val">${(v/1000).toFixed(1)}K</div><div class="bar ${i===5?'today':''}" style="height:${Math.round(v/max*100)}%;background:${i===5?'var(--gold)':'rgba(201,168,76,0.25)'};border:1px solid ${i===5?'var(--gold)':'rgba(201,168,76,0.35)'}"></div></div>`).join('')
+}
+
+// ══════════════════════════════════════
+// COMPARAISON TABLE
+// ══════════════════════════════════════
+function renderCompTable(){
+  const data=[
+    ['Site personnalisé','✓','✗','✗'],
+    ['0% commission','✓','✗ 12%','✗ 10%'],
+    ['Données clients','✓ Les tiens','✗ RA les garde','✗'],
+    ['Prix fixe mensuel','✓ 200€','✗ % var.','✗ % var.'],
+    ['Dashboard propre','✓','✓','✓'],
+    ['QR Anti-fraude','✓','✓','✓'],
+    ['Newsletter intégrée','✓','✗','✗'],
+    ['Revente billets','✓','✗','✗'],
+    ['Programme fidélité','✓','✗','✗'],
+    ['Prédictions IA','✓','✗','✗'],
+    ['WhatsApp Business','✓','✗','✗'],
+  ]
+  const el=document.getElementById('compTable')
+  if(!el) return
+  el.innerHTML=data.map((row,i)=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 20px;border-bottom:1px solid var(--border);background:${i%2===0?'rgba(255,255,255,0.01)':'transparent'}"><div style="font-size:12px;font-weight:500">${row[0]}</div><div style="text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:${row[1].startsWith('✓')?'var(--green)':'var(--red)'};font-weight:600">${row[1]}</div><div style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:${row[2].startsWith('✓')?'var(--green)':'var(--red)'}">${row[2]}</div><div style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:${row[3].startsWith('✓')?'var(--green)':'var(--red)'}">${row[3]}</div></div>`).join('')
+}
+
+function renderPricingFeatures(){
+  const el=document.getElementById('pricingFeatures')
+  if(!el) return
+  const features=['Site public personnalisé','Billettería completa','QR Code anti-fraude','Dashboard admin','Scanner QR (caméra)','Newsletter ilimitada','Programa de fidelidad','Reventa de entradas','Predicciones de ventas','WhatsApp Business','Soporte dedicado']
+  el.innerHTML=features.map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0"><div style="color:var(--green);font-size:12px;flex-shrink:0">✓</div><div style="font-size:13px;color:var(--muted)">${f}</div></div>`).join('')
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+lang=detectLang()
+document.addEventListener('DOMContentLoaded',()=>{
+  setLang(lang)
+  renderEvents()
+  renderPhotos()
+  renderCompTable()
+  renderPricingFeatures()
+  document.getElementById('dashDate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()
+  document.getElementById('adminDate').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()
+})
+</script>
+</body>
+</html>
