@@ -34,7 +34,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--white);fo
 
 /* ── SECTIONS ── */
 .section{display:none;height:100vh;overflow:hidden}
-.section.active{display:flex}
 
 /* ── NAV TOP ── */
 .top-nav{
@@ -416,7 +415,7 @@ select.form-input option{background:#1a1a1a}
 <!-- ════════════════════════════════════════
      SECTION 1 — PAGE MARKETING HONOPS
 ════════════════════════════════════════ -->
-<div id="section-marketing" style="display:block;height:100vh;overflow-y:auto;padding-top:48px" class="active-scroll">
+<div id="section-marketing" class="section" style="display:block;overflow-y:auto;height:100vh;padding-top:48px">
   <div style="min-height:100vh;background:var(--bg)">
 
     <!-- Nav -->
@@ -712,7 +711,7 @@ select.form-input option{background:#1a1a1a}
 <!-- ════════════════════════════════════════
      SECTION 3 — DASHBOARD CLUB
 ════════════════════════════════════════ -->
-<div class="section" id="section-dashboard" style="display:none">
+<div id="section-dashboard" class="section" style="display:none;height:100vh">
   <div class="sidebar-overlay" id="dashOverlay" onclick="toggleSidebar('dash')"></div>
   <div class="sidebar" id="dashSidebar">
     <div class="sidebar-logo" style="position:relative">
@@ -755,7 +754,7 @@ select.form-input option{background:#1a1a1a}
 <!-- ════════════════════════════════════════
      SECTION 4 — SUPER ADMIN
 ════════════════════════════════════════ -->
-<div class="section" id="section-admin" style="display:none">
+<div id="section-admin" class="section" style="display:none;height:100vh">
   <div class="sidebar-overlay" id="adminOverlay" onclick="toggleSidebar('admin')"></div>
   <div class="admin-sidebar" id="adminSidebar">
     <div class="admin-logo-wrap" style="position:relative">
@@ -924,15 +923,30 @@ function closeSidebars(){
 // SECTION NAVIGATION
 // ══════════════════════════════════════
 function showSection(id){
-  document.querySelectorAll('.section').forEach(s=>{s.style.display='none';s.classList.remove('active')})
+  // Cacher toutes les sections
+  ['marketing','public','dashboard','admin'].forEach(name=>{
+    const el=document.getElementById('section-'+name)
+    if(el) el.style.display='none'
+  })
+  // Retirer active de tous les boutons
   document.querySelectorAll('.top-btn').forEach(b=>b.classList.remove('active'))
+  // Afficher la bonne section
   const sec=document.getElementById('section-'+id)
-  sec.style.display=id==='dashboard'||id==='admin'?'flex':'block'
-  sec.classList.add('active')
+  if(!sec){ console.error('Section introuvable: section-'+id); return }
+  if(id==='dashboard'||id==='admin'){
+    sec.style.display='flex'
+  } else {
+    sec.style.display='block'
+  }
+  // Activer le bon bouton
   const map={marketing:0,public:1,dashboard:2,admin:3}
-  document.querySelectorAll('.top-btn')[map[id]]?.classList.add('active')
+  const btns=document.querySelectorAll('.top-btn')
+  if(btns[map[id]]) btns[map[id]].classList.add('active')
+  // Init si besoin
   if(id==='dashboard') initDashboard()
   if(id==='admin') initAdmin()
+  // Scroll to top
+  if(sec.scrollTop!==undefined) sec.scrollTop=0
 }
 
 // ══════════════════════════════════════
